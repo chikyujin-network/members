@@ -16,6 +16,8 @@ await build({
     js: [
       'function doGet(e) { return App.doGet(e); }',
       'function doPost(e) { return App.doPost(e); }',
+      '/** シートと見出しを作る（エディタから実行） */',
+      'function setupSpreadsheet() { return App.setupSpreadsheet(); }',
     ].join('\n'),
   },
 });

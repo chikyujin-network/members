@@ -39,6 +39,11 @@ npm run build     # gas/dist/Code.js を作る
 | --- | --- |
 | `SPREADSHEET_ID` | 書き込み先のスプレッドシートID |
 | `PROTO_ENABLED` | `true` のときだけ試作用の書き込みを受け付ける。本番では設定しない |
+| `GOOGLE_CLIENT_ID` | 「Googleでログイン」の OAuth クライアントID。`web/config.js` の `googleClientId` と同じ値 |
+
+## スプレッドシートの準備
+
+push のあと、Apps Script のエディタを開き直し、関数「setupSpreadsheet」を選んで実行する。会員・年度請求・イベント・出席と、設定のシートが見出し付きで作られる（何度実行してもデータは消えない）。最後に「設定_スタッフ」に受付をする人の Google アカウントを登録する。
 
 ## 画面の公開（GitHub Pages）
 

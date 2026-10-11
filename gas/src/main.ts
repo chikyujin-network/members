@@ -5,7 +5,11 @@
  * スクリプトプロパティ（プロジェクトの設定 → スクリプト プロパティ）:
  *   SPREADSHEET_ID  書き込み先のスプレッドシートID（テスト用のものだけを指定する）
  *   PROTO_ENABLED   'true' のときだけ試作用の書き込みを受け付ける。本番では設定しない
+ *   GOOGLE_CLIENT_ID 「Googleでログイン」の OAuth クライアントID
  */
+
+import { verifyStaff } from './auth';
+export { setupSpreadsheet } from './setup';
 
 type Json = Record<string, unknown>;
 
@@ -30,6 +34,11 @@ export function doPost(e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Cont
         return json({ ok: true, action: 'ping', time: new Date().toISOString() });
       case 'proto.append':
         return json(protoAppend(String(body.text ?? '')));
+      case 'auth.whoami': {
+        // ログインしたスタッフの名前と権限を返す（ログイン確認用）
+        const auth = verifyStaff(body.idToken);
+        return json(auth.ok ? { ok: true, email: auth.staff.email, name: auth.staff.name, role: auth.staff.role } : auth);
+      }
       default:
         return json({ ok: false, error: `unknown action: ${String(body.action)}` });
     }
