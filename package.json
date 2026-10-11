@@ -1,0 +1,20 @@
+{
+  "name": "chikyujin-members",
+  "private": true,
+  "version": "0.1.0",
+  "description": "地球人ネットワーク 会員管理システム",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-gas.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "push:dev": "npm run build && cp gas/.clasp.dev.json gas/.clasp.json && cd gas && clasp push",
+    "push:prod": "npm run build && cp gas/.clasp.prod.json gas/.clasp.json && cd gas && clasp push"
+  },
+  "devDependencies": {
+    "@types/google-apps-script": "^2.0.13",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  }
+}

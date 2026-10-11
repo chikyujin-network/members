@@ -1,0 +1,19 @@
+# 依存とビルド成果物
+node_modules/
+gas/dist/
+gas/.clasp.json
+
+# 会員データは絶対にリポジトリに入れない
+*.xlsx
+*.xls
+*.csv
+migration/input/
+migration/output/
+
+# 認証情報
+.clasprc.json
+*.pem
+.env
+
+# OS
+.DS_Store
