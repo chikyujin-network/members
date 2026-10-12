@@ -304,12 +304,14 @@ export function generateDummyData(opts: DummyOptions): DummyData {
 
     // 年度請求
     const engagement = 0.4 + rng.float() * 0.6;
+    // 実際の名簿のように、半分近くは1〜2年で来なくなる（休眠会員）
+    const dropOutFy = !forcedExempt && rng.chance(0.45) ? joinFy + rng.int(2) : Number.POSITIVE_INFINITY;
     const memberCharges: Record<string, string | number>[] = [];
     for (let fy = joinFy; fy <= currentFy; fy++) {
       const isJoinFy = fy === joinFy;
       // 入会した年度は必ず参加している。ほかの年度は、新しい年度ほど参加しやすい
       const recency = 0.45 + 0.1 * (fy - (currentFy - 5));
-      const active = isJoinFy || (rng.chance(Math.min(0.95, recency * engagement + 0.2)) && !(status === '退会' && fy === currentFy));
+      const active = isJoinFy || (fy <= dropOutFy && rng.chance(Math.min(0.95, recency * engagement + 0.2)) && !(status === '退会' && fy === currentFy));
       if (!active) continue;
 
       const range = fiscalYearRange(fy, startMonth);
