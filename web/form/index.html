@@ -102,6 +102,20 @@
     .flag:has(input:checked) { border-color: var(--navy); background: var(--blue-soft); font-weight: 700; }
     .flag:has(input:focus-visible) { outline: 3px solid var(--blue); }
     .invalid .flag { border-color: var(--error); }
+.sub { font-size: 0.85rem; color: var(--muted); margin: 12px 0 6px; }
+    .sub:first-of-type { margin-top: 0; }
+    .towns { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+    .town {
+      position: relative; display: flex; align-items: center; justify-content: center; min-height: 58px;
+      padding: 8px 4px; border: 1.5px solid var(--lavender); border-radius: 12px; background: #fff;
+      cursor: pointer; text-align: center; font-size: 1rem; line-height: 1.3;
+    }
+    .town rt { font-size: 0.6em; }
+    .town small { display: block; font-size: 0.7rem; color: var(--muted); }
+    .town input { position: absolute; opacity: 0; pointer-events: none; }
+    .town:has(input:checked) { border-color: var(--navy); background: var(--blue-soft); font-weight: 700; }
+    .town:has(input:focus-visible) { outline: 3px solid var(--blue); }
+    .invalid .town { border-color: var(--error); }
     [hidden] { display: none !important; }
   </style>
 </head>
@@ -189,11 +203,13 @@
         <div class="field" data-required="municipality">
           <div class="q"><span data-t="addrQ"></span><span class="req" data-t="req"></span></div>
           <p class="hint" data-t="addrHint"></p>
-          <div class="row2">
-            <input type="text" id="postal" name="postal" inputmode="numeric" autocomplete="postal-code" placeholder="399-4117">
-            <select id="municipality" name="municipality"></select>
-          </div>
-          <input type="text" id="address" name="address" style="margin-top:8px" data-ph="addrPh">
+          <div class="sub" data-t="muniPick"></div>
+          <div class="towns" id="muniGrid" role="radiogroup"></div>
+          <input type="text" id="muniOther" name="muniOther" style="margin-top:8px" hidden data-ph="muniOtherPh">
+          <div class="sub" data-t="postalLabel"></div>
+          <input type="text" id="postal" name="postal" inputmode="numeric" autocomplete="postal-code" placeholder="399-4117">
+          <div class="sub" data-t="addrRest"></div>
+          <input type="text" id="address" name="address" data-ph="addrPh">
           <div class="err" data-t="errChoose"></div>
         </div>
       </section>
@@ -354,9 +370,10 @@
         countryQ: 'しゅっしんの くに',
         countryPick: 'えらんでください', countryOther: 'その{他|た}', countryOtherPh: 'くにの なまえを かいてください',
         addrQ: 'すんでいる ところ',
-        addrHint: 'ゆうびんばんごう、{市町村|しちょうそん}、そのあと',
-        addrPh: '{番地|ばんち}・たてもの・へやばんごう',
-        muniPick: '{市町村|しちょうそん}',
+        addrHint: 'すんでいる まちを えらんで、ゆうびんばんごうと じゅうしょを かいてください。',
+        postalLabel: 'ゆうびんばんごう', addrRest: 'じゅうしょ（まちの なまえの あと）', muniOtherPh: 'まちの なまえを かいてください',
+        addrPh: 'ばんち・たてもの・へやばんごう',
+        muniPick: 'すんでいる まち（{市町村|しちょうそん}）',
         s4Title: 'れんらくさき',
         mobileQ: 'けいたい{電話|でんわ}',
         emailQ: 'メール',
@@ -423,7 +440,8 @@
         countryQ: 'Country of origin',
         countryPick: 'Please choose', countryOther: 'Other', countryOtherPh: 'Write your country',
         addrQ: 'Where you live',
-        addrHint: 'Postal code, city/town, then the rest',
+        addrHint: 'Choose your city or town, then write your postal code and address.',
+        postalLabel: 'Postal code', addrRest: 'Address (after the city/town name)', muniOtherPh: 'Write your city or town',
         addrPh: 'Street number, building, room',
         muniPick: 'City / Town',
         s4Title: 'Contact',
@@ -471,7 +489,8 @@
       ['PE', 'ペルー', 'Peru'], ['NP', 'ネパール', 'Nepal'], ['KR', 'かんこく', 'Korea'], ['IN', 'インド', 'India'],
       ['LK', 'スリランカ', 'Sri Lanka'], ['US', 'アメリカ', 'USA'],
     ];
-    const MUNICIPALITIES = ['駒ヶ根市', '飯島町', '宮田村', '中川村', '伊那市', '箕輪町', '南箕輪村', '松川町', '高森町'];
+    // 市町村と読み（ふりがな）
+    const MUNICIPALITIES = [['駒ヶ根市', 'こまがねし'], ['飯島町', 'いいじままち'], ['宮田村', 'みやだむら'], ['中川村', 'なかがわむら'], ['伊那市', 'いなし'], ['箕輪町', 'みのわまち'], ['南箕輪村', 'みなみみのわむら'], ['松川町', 'まつかわまち'], ['高森町', 'たかもりまち']];
     const MUNI_EN = { '駒ヶ根市': 'Komagane', '飯島町': 'Iijima', '宮田村': 'Miyada', '中川村': 'Nakagawa', '伊那市': 'Ina', '箕輪町': 'Minowa', '南箕輪村': 'Minamiminowa', '松川町': 'Matsukawa', '高森町': 'Takamori' };
 
     let lang = 'ja';
@@ -492,6 +511,13 @@
       return `${flag(v)} ${lang === 'ja' ? c[1] : c[2]}`;
     }
 
+    function muniLabel() {
+      const v = checked('municipality')[0];
+      if (!v) return '';
+      if (v === 'other') return val('muniOther');
+      return lang === 'ja' ? v : `${MUNI_EN[v]} (${v})`;
+    }
+
     function ruby(s) {
       return s.replace(/\{([^|}]+)\|([^}]+)\}/g, '<ruby>$1<rt>$2</rt></ruby>');
     }
@@ -510,13 +536,14 @@
       const cv = checked('country')[0];
       $('#countryGrid').innerHTML =
         COUNTRIES.map(([code, ja, en]) => `<label class="flag"><input type="radio" name="country" value="${code}"><span class="emoji" aria-hidden="true">${flag(code)}</span><span>${lang === 'ja' ? ja : en}</span></label>`).join('') +
-        `<label class="flag"><input type="radio" name="country" value="other"><span class="emoji" aria-hidden="true">🌏</span><span>${plain('countryOther')}</span></label>`;
+        `<label class="flag"><input type="radio" name="country" value="other"><span class="emoji" aria-hidden="true">🌏</span><span>${t('countryOther')}</span></label>`;
       if (cv) $(`input[name="country"][value="${cv}"]`).checked = true;
-      const m = $('#municipality'), mv = m.value;
-      m.innerHTML = `<option value="">${plain('muniPick')}</option>` +
-        MUNICIPALITIES.map((x) => `<option value="${x}">${lang === 'ja' ? x : MUNI_EN[x]}</option>`).join('') +
-        `<option value="other">${plain('countryOther')}</option>`;
-      m.value = mv;
+      // 市町村も、ふりがな付きのボタンで選ぶ（プルダウンの中にはふりがなを表示できないため）
+      const mv = checked('municipality')[0];
+      $('#muniGrid').innerHTML =
+        MUNICIPALITIES.map(([name, yomi]) => `<label class="town"><input type="radio" name="municipality" value="${name}"><span>${lang === 'ja' ? `<ruby>${name}<rt>${yomi}</rt></ruby>` : `${MUNI_EN[name]}<small>${name}</small>`}</span></label>`).join('') +
+        `<label class="town"><input type="radio" name="municipality" value="other"><span>${t('countryOther')}</span></label>`;
+      if (mv) $(`input[name="municipality"][value="${mv}"]`).checked = true;
       $$('.lang button[data-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
       if (step === TOTAL) buildSummary();
       updateNav();
@@ -551,6 +578,7 @@
         else if (el instanceof RadioNodeList || $$(`input[name="${name}"][type=checkbox]`).length) filled = checked(name).length > 0;
         else filled = val(name) !== '';
         if (name === 'country' && checked('country')[0] === 'other' && !val('countryOther')) filled = false;
+        if (name === 'municipality' && checked('municipality')[0] === 'other' && !val('muniOther')) filled = false;
         f.classList.toggle('invalid', !filled);
         if (!filled) ok = false;
       });
@@ -570,7 +598,7 @@
         ['sumName', [val('nameLocal'), val('legalName')].filter(Boolean).join(' ／ ')],
         ['sumNick', val('nickname')],
         ['sumCountry', countryLabel()],
-        ['sumAddr', [val('postal'), $('#municipality').selectedOptions[0]?.text, val('address')].filter(Boolean).join(' ')],
+        ['sumAddr', [val('postal'), muniLabel(), val('address')].filter(Boolean).join(' ')],
         ['sumMobile', val('mobile')],
         ['sumRoles', checked('roles').map((v) => labelOf('roles', v)).join('、')],
         ['sumType', labelOf('type', checked('type')[0]) + (checked('type')[0] === 'supporting' ? ` × ${val('units')}` : '')],
@@ -592,6 +620,7 @@
       $('#unitsBox').hidden = checked('type')[0] !== 'supporting';
       $('#residentBox').hidden = checked('insurance')[0] !== 'want';
       $('#countryOther').hidden = checked('country')[0] !== 'other';
+      $('#muniOther').hidden = checked('municipality')[0] !== 'other';
       $('#guardianBox').hidden = !$('#minor').checked;
     });
     form.addEventListener('input', (e) => e.target.closest('.field')?.classList.remove('invalid'));
