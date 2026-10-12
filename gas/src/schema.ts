@@ -2,6 +2,13 @@
  * スプレッドシートのシート構成（列の定義）。
  * 1行目は日本語の見出し。プログラムは見出しの文字ではなく、この定義の順番（列の位置）で読み書きする。
  * 列を足すときは、各シートの末尾に追加する（途中に挿入すると既存のデータとずれる）。
+ *
+ * データの更新は、すべて画面（GAS の API）から行う。シートはシートごと保護し、
+ * 運営スタッフも直接は編集しない（うっかりシートを壊さないため）。
+ *   - 新規入会：本人の登録フォーム（紙の場合はスタッフが代理入力）
+ *   - 既存会員の変更：運営スタッフ用の編集画面（Googleでログインした「運営」だけ）
+ *   - 会費・保険・出席：受付画面
+ * 変更はすべて「変更履歴」シートに、誰がいつ何を変えたかを残す。
  */
 
 export interface ColumnDef {
@@ -14,13 +21,19 @@ export interface ColumnDef {
   width?: number;
   /** 数値の列（金額・年度・口数）。それ以外は文字列として扱う */
   numeric?: boolean;
+  /** システムが管理する列。編集画面からも変えられない（会員番号、QRトークン、日時など） */
+  system?: boolean;
+  /** 空にできない列 */
+  required?: boolean;
+  /** 'YYYY-MM-DD' の日付の列 */
+  date?: boolean;
+  /** 「、」区切りで複数選べる列の選択肢 */
+  multiOptions?: readonly string[];
 }
 
 export interface SheetDef {
   name: string;
   columns: readonly ColumnDef[];
-  /** 運営が直接編集してよい列（それ以外は保護の対象） */
-  editableKeys?: readonly string[];
   /** 初期データ（設定シートだけ） */
   seedRows?: readonly (readonly (string | number | boolean)[])[];
 }
@@ -37,20 +50,21 @@ export const EVENT_STATUS = ['予定', '休講', '中止'] as const;
 export const CHECKIN_METHODS = ['QR', '検索', '新規'] as const;
 export const SOURCES = ['フォーム', '紙', '移行'] as const;
 export const STAFF_ROLES = ['運営', '受付'] as const;
+export const CHANGE_ACTIONS = ['新規', '変更', '再発行', '退会'] as const;
 
 export const MEMBERS: SheetDef = {
   name: '会員',
   columns: [
-    { key: 'memberNo', header: '会員番号', note: '支部番号＋5桁（例：001-00123）。採番後は変えない', width: 100 },
-    { key: 'branchCode', header: '支部番号', width: 70 },
-    { key: 'status', header: '登録状態', options: MEMBER_STATUS, width: 80 },
-    { key: 'legalName', header: '登録名', note: 'パスポート・住民票と同じ表記', width: 180 },
+    { key: 'memberNo', header: '会員番号', note: '支部番号＋5桁（例：001-00123）。採番後は変えない', width: 100, system: true },
+    { key: 'branchCode', header: '支部番号', width: 70, system: true },
+    { key: 'status', header: '登録状態', options: MEMBER_STATUS, width: 80, required: true },
+    { key: 'legalName', header: '登録名', note: 'パスポート・住民票と同じ表記', width: 180, required: true },
     { key: 'altName', header: '別名（旧姓・別の表記）', note: '検索専用。画面や名簿には出さない', width: 140 },
-    { key: 'kana', header: 'よみ（カタカナ）', width: 160 },
-    { key: 'nickname', header: 'ニックネーム', width: 100 },
-    { key: 'membershipType', header: '会員種別', note: '設定_会員種別の名称', width: 70 },
-    { key: 'roles', header: '役割', note: `複数のときは「、」区切り（${ROLES.join('、')}）`, width: 140 },
-    { key: 'activities', header: '参加したい活動', note: `複数のときは「、」区切り（${ACTIVITIES.join('、')}）`, width: 160 },
+    { key: 'kana', header: 'よみ（カタカナ）', width: 160, required: true },
+    { key: 'nickname', header: 'ニックネーム', width: 100, required: true },
+    { key: 'membershipType', header: '会員種別', note: '設定_会員種別の名称', width: 70, required: true },
+    { key: 'roles', header: '役割', note: `複数のときは「、」区切り（${ROLES.join('、')}）`, width: 140, multiOptions: ROLES },
+    { key: 'activities', header: '参加したい活動', note: `複数のときは「、」区切り（${ACTIVITIES.join('、')}）`, width: 160, multiOptions: ACTIVITIES },
     { key: 'country', header: '国・地域', note: 'ISOの2文字コード（例：VN、JP）', width: 70 },
     { key: 'postalCode', header: '郵便番号', width: 90 },
     { key: 'municipality', header: '市町村', width: 90 },
@@ -62,17 +76,16 @@ export const MEMBERS: SheetDef = {
     { key: 'lineName', header: 'LINE表示名', width: 120 },
     { key: 'japaneseGoal', header: '日本語の目標', width: 160 },
     { key: 'notes', header: '所属・備考', width: 200 },
-    { key: 'joinDate', header: '入会日', note: 'YYYY-MM-DD', width: 100 },
-    { key: 'lastAttendedDate', header: '最終参加日', note: '自動で更新。手入力しない', width: 100 },
-    { key: 'activityStatus', header: '活動状態', options: ACTIVITY_STATUS, note: '自動で更新。手入力しない', width: 80 },
-    { key: 'qrToken', header: 'QRトークン', note: '会員証のQR用。紛失時は再発行', width: 120 },
-    { key: 'consentAt', header: '個人情報の同意日時', width: 150 },
+    { key: 'joinDate', header: '入会日', note: 'YYYY-MM-DD', width: 100, date: true },
+    { key: 'lastAttendedDate', header: '最終参加日', note: '自動で更新。手入力しない', width: 100, system: true },
+    { key: 'activityStatus', header: '活動状態', options: ACTIVITY_STATUS, note: '自動で更新。手入力しない', width: 80, system: true },
+    { key: 'qrToken', header: 'QRトークン', note: '会員証のQR用。紛失時は再発行', width: 120, system: true },
+    { key: 'consentAt', header: '個人情報の同意日時', width: 150, system: true },
     { key: 'guardianConsent', header: '保護者の同意', options: YES_NO, width: 90 },
-    { key: 'source', header: '登録経路', options: SOURCES, width: 80 },
-    { key: 'createdAt', header: '作成日時', width: 150 },
-    { key: 'updatedAt', header: '更新日時', width: 150 },
+    { key: 'source', header: '登録経路', options: SOURCES, width: 80, system: true },
+    { key: 'createdAt', header: '作成日時', width: 150, system: true },
+    { key: 'updatedAt', header: '更新日時', width: 150, system: true },
   ],
-  editableKeys: ['notes', 'japaneseGoal'],
 };
 
 export const CHARGES: SheetDef = {
@@ -95,7 +108,6 @@ export const CHARGES: SheetDef = {
     { key: 'notes', header: '備考', width: 200 },
     { key: 'recordedAt', header: '記録日時', width: 150 },
   ],
-  editableKeys: ['handedToTreasurerDate', 'notes'],
 };
 
 export const EVENTS: SheetDef = {
@@ -112,7 +124,6 @@ export const EVENTS: SheetDef = {
     { key: 'status', header: '状態', options: EVENT_STATUS, width: 70 },
     { key: 'notes', header: '備考', width: 200 },
   ],
-  editableKeys: ['title', 'venue', 'status', 'notes'],
 };
 
 export const ATTENDANCE: SheetDef = {
@@ -137,7 +148,6 @@ export const SETTINGS: SheetDef = {
     { key: 'value', header: '値', width: 260 },
     { key: 'description', header: '説明', width: 360 },
   ],
-  editableKeys: ['value'],
   seedRows: [
     ['支部番号', '001', '3桁の数字'],
     ['支部名', '地球人ネットワークinこまがね', ''],
@@ -202,6 +212,22 @@ export const SETTINGS_STAFF: SheetDef = {
   ],
 };
 
+/** 変更履歴：画面から行った変更を1項目1行で残す。追記だけで、消したり書き換えたりしない */
+export const CHANGE_LOG: SheetDef = {
+  name: '変更履歴',
+  columns: [
+    { key: 'changedAt', header: '日時', width: 150 },
+    { key: 'changedBy', header: '変更した人', width: 200 },
+    { key: 'sheet', header: 'シート', width: 80 },
+    { key: 'recordId', header: '対象（会員番号など）', width: 120 },
+    { key: 'action', header: '操作', options: CHANGE_ACTIONS, width: 70 },
+    { key: 'field', header: '項目', width: 140 },
+    { key: 'before', header: '変更前', width: 200 },
+    { key: 'after', header: '変更後', width: 200 },
+    { key: 'reason', header: '理由・メモ', width: 200 },
+  ],
+};
+
 /** 元データのシート（順番どおりに作る） */
 export const ALL_SHEETS: readonly SheetDef[] = [
   MEMBERS,
@@ -213,6 +239,7 @@ export const ALL_SHEETS: readonly SheetDef[] = [
   SETTINGS_INSURANCE,
   SETTINGS_CLASS_SCHEDULE,
   SETTINGS_STAFF,
+  CHANGE_LOG,
 ];
 
 /** 列のキーから、1始まりの列番号を返す */
