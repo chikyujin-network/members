@@ -42,7 +42,7 @@ MAX_COL = 27  # A〜AA 列だけ読む（シートの右端に不要な数式が
 MEMBER_COLUMNS = [
     '会員番号', '支部番号', '登録状態', '登録名', '別名（旧姓・別の表記）', 'よみ（カタカナ）', 'ニックネーム',
     '会員種別', '役割', '参加したい活動', '国・地域', '郵便番号', '市町村', '番地以降', '住民票が補填自治体にある',
-    '携帯電話', '自宅電話', 'メール', 'LINE表示名', '日本語の目標', '所属・備考', '入会日', '最終参加日', '活動状態',
+    '携帯電話', '自宅電話', 'メール', '日本語の目標', '所属・備考', '入会日', '最終参加日', '活動状態',
     'QRトークン', '個人情報の同意日時', '保護者の同意', '登録経路', '作成日時', '更新日時',
 ]
 CHARGE_COLUMNS = [
@@ -409,7 +409,7 @@ def main() -> None:
                 c['会員番号'] == m.member_no and c['対象年度'] in (2026, 2027) for c in charges.values())
             w.writerow([
                 m.member_no, args.branch, '本登録', m.legal_name, m.alt_name, m.kana, m.nickname, m.membership_type,
-                '', '', m.country, m.postal, m.municipality, m.address, '', m.mobile, m.home, m.email, '', '',
+                '', '', m.country, m.postal, m.municipality, m.address, '', m.mobile, m.home, m.email, '',
                 ' ／ '.join(dict.fromkeys(m.notes)), m.join_date, '', '活動中' if recent else '休眠',
                 secrets.token_urlsafe(12), '', '', '移行', now, now,
             ])

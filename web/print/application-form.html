@@ -56,7 +56,7 @@
       border-radius: 50%; background: var(--navy); color: #fff; font-size: 7pt; flex: none; transform: translateY(0.6mm);
     }
     .rows { display: grid; }
-    .row { display: grid; grid-template-columns: 41mm 1fr; border-top: 0.2mm solid #cfd3e6; min-height: 8mm; }
+    .row { display: grid; grid-template-columns: 41mm 1fr; border-top: 0.2mm solid #cfd3e6; min-height: 8.8mm; }
     .row:first-child { border-top: 0; }
     .row > .lab { padding: 0.5mm 2mm; border-right: 0.2mm solid #cfd3e6; display: flex; flex-direction: column; justify-content: center; }
     .row > .lab b { font-weight: 700; white-space: nowrap; }
@@ -213,14 +213,10 @@
         <div class="lab"><b>いえの <ruby>電話<rt>でんわ</rt></ruby></b><span class="en">Home phone (optional)</span></div>
         <div class="val"></div>
       </div>
-      <div class="row">
-        <div class="lab"><b>メール</b><span class="en">Email (optional)</span></div>
-        <div class="val"></div>
-      </div>
-      <div class="row">
-        <div class="lab"><b>LINEの なまえ</b><span class="en">LINE name (optional)</span></div>
-        <div class="val"><span class="hint">グループLINEで <ruby>見<rt>み</rt></ruby>える なまえ</span></div>
-      </div>
+    </div>
+    <div class="row">
+      <div class="lab"><b>メール</b><span class="en">Email (optional)</span></div>
+      <div class="val"></div>
     </div>
   </section>
 
@@ -284,18 +280,14 @@
 
   <!-- 7. どうい -->
   <section>
-    <h2><span class="num">7</span>どうい・サイン <span class="en">Consent and signature</span></h2>
+    <h2><span class="num">7</span>どうい <span class="en">Consent</span></h2>
     <div class="consent">
-      <p>かいた じょうほうは、<ruby>会員<rt>かいいん</rt></ruby>の かんり、<ruby>会費<rt>かいひ</rt></ruby>・ほけんの てつづき、かつどうの おしらせ、<ruby>地球人<rt>ちきゅうじん</rt></ruby>ネットワーク<ruby>全体<rt>ぜんたい</rt></ruby>の しゅうけい（なまえや れんらくさきは つかいません）に つかいます。ほかの <ruby>人<rt>ひと</rt></ruby>には わたしません。</p>
+      <p>かいた じょうほうは、<ruby>会員<rt>かいいん</rt></ruby>の かんり、<ruby>会費<rt>かいひ</rt></ruby>・ほけんの てつづき、かつどうの おしらせ、<ruby>地球人<rt>ちきゅうじん</rt></ruby>ネットワーク<ruby>全体<rt>ぜんたい</rt></ruby>の しゅうけいに つかいます（なまえや れんらくさきは つかいません）。ほかの <ruby>人<rt>ひと</rt></ruby>には わたしません。</p>
       <p class="en">We use this information for membership management, fees and insurance, activity announcements, and anonymous statistics across Chikyujin Network (without names or contact details). We do not give it to anyone else.</p>
       <div class="opts" style="margin-top:0.6mm">
         <span class="opt"><b>どうい します</b><span class="req">ひっす</span><span class="en">I agree</span></span>
-        <span class="opt">18さい みまんです → ほごしゃ（おや など）の サインも ひつようです<span class="en">Under 18: a parent/guardian must also sign</span></span>
+        <span class="opt">18さい みまんです（うけつけで ほごしゃに かくにん します）<span class="en">I am under 18 (we will check with your parent/guardian at the reception)</span></span>
       </div>
-    </div>
-    <div class="sign">
-      <div class="line">ほんにんの サイン&ensp;<span class="en">Your signature</span></div>
-      <div class="line">ほごしゃの サイン（18さい みまん）&ensp;<span class="en">Parent/guardian (under 18)</span></div>
     </div>
   </section>
 
@@ -314,7 +306,8 @@
         <th>会計へ</th><td>&emsp;&ensp;月&emsp;日</td>
       </tr>
       <tr>
-        <th>システム入力</th><td colspan="3">&emsp;&emsp;&emsp;年&emsp;&emsp;月&emsp;&emsp;日&emsp;入力者：</td>
+        <th>システム入力</th><td>&emsp;&emsp;月&emsp;&emsp;日&ensp;入力者：</td>
+        <th>18歳未満</th><td>□保護者に確認済</td>
         <th>メモ</th><td></td>
       </tr>
     </table>

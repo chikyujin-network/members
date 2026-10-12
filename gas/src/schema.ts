@@ -73,7 +73,6 @@ export const MEMBERS: SheetDef = {
     { key: 'mobile', header: '携帯電話', width: 120 },
     { key: 'homePhone', header: '自宅電話', width: 120 },
     { key: 'email', header: 'メール', width: 180 },
-    { key: 'lineName', header: 'LINE表示名', width: 120 },
     { key: 'japaneseGoal', header: '日本語の目標', width: 160 },
     { key: 'notes', header: '所属・備考', width: 200 },
     { key: 'joinDate', header: '入会日', note: 'YYYY-MM-DD', width: 100, date: true },

@@ -161,15 +161,10 @@
       <section class="step" data-step="2" hidden>
         <div class="step-label" data-t="stepOf"></div>
         <h1 data-t="s2Title"></h1>
-        <div class="field">
-          <label for="legalName"><span data-t="legalQ"></span><span class="opt" data-t="legalTag"></span></label>
+        <div class="field" data-required="legalName">
+          <label for="legalName"><span data-t="legalQ"></span><span class="req" data-t="req"></span></label>
           <p class="hint" data-t="legalHint"></p>
-          <input type="text" id="legalName" name="legalName" autocomplete="name" placeholder="NGUYEN Thi Lan" autocapitalize="characters">
-        </div>
-        <div class="field" data-required="nameLocal">
-          <label for="nameLocal"><span data-t="nameLocalQ"></span><span class="req" data-t="req"></span></label>
-          <p class="hint" data-t="nameLocalHint"></p>
-          <input type="text" id="nameLocal" name="nameLocal" placeholder="グエン ティ ラン ／ 山田 花子">
+          <input type="text" id="legalName" name="legalName" autocomplete="name" placeholder="NGUYEN Thi Lan ／ 山田 花子">
           <div class="err" data-t="errInput"></div>
         </div>
         <div class="field" data-required="kana">
@@ -226,11 +221,6 @@
         <div class="field">
           <label for="email"><span data-t="emailQ"></span><span class="opt" data-t="opt"></span></label>
           <input type="email" id="email" name="email" autocomplete="email" placeholder="name@example.com">
-        </div>
-        <div class="field">
-          <label for="lineName"><span data-t="lineQ"></span><span class="opt" data-t="opt"></span></label>
-          <p class="hint" data-t="lineHint"></p>
-          <input type="text" id="lineName" name="lineName">
         </div>
       </section>
 
@@ -308,9 +298,6 @@
         <dl class="summary" id="summary"></dl>
         <div class="field">
           <label class="choice"><input type="checkbox" id="minor" name="minor"><span data-t="minorQ"></span></label>
-          <div id="guardianBox" hidden style="margin-top:8px">
-            <label class="choice"><input type="checkbox" id="guardian" name="guardian"><span data-t="guardianQ"></span></label>
-          </div>
         </div>
         <div class="field" data-required="consent">
           <div class="consent-text" data-t="consentText"></div>
@@ -357,10 +344,8 @@
         memberNoQ: '{会員番号|かいいんばんごう}',
         memberNoHint: 'わかれば かいてください。かわったところ だけ かけば いいです。',
         s2Title: 'なまえ',
-        legalQ: 'パスポートの なまえ（ローマじ）', legalTag: '{日本|にほん}の ひとは なくても よい',
-        legalHint: 'パスポートや ざいりゅうカードと おなじに かいてください。',
-        nameLocalQ: 'なまえ（カタカナ または {漢字|かんじ}）',
-        nameLocalHint: '{日本|にほん}で つかう なまえを かいてください。',
+        legalQ: 'なまえ',
+        legalHint: '{外国|がいこく}の {人|ひと}：パスポート・{在留|ざいりゅう}カードと おなじ ローマじ。{日本|にほん}の {人|ひと}：{漢字|かんじ}。',
         kanaQ: 'よみかた（カタカナ）',
         nickQ: 'よんで ほしい なまえ（ニックネーム）',
         nickHint: '{会員証|かいいんしょう}に {大|おお}きく でます。',
@@ -377,8 +362,6 @@
         s4Title: 'れんらくさき',
         mobileQ: 'けいたい{電話|でんわ}',
         emailQ: 'メール',
-        lineQ: 'LINEの なまえ',
-        lineHint: 'グループLINEで {見|み}える なまえ',
         s5Title: 'かつどう',
         rolesQ: 'どのように さんか しますか',
         roleLearner: '{日本語|にほんご}を べんきょう したい',
@@ -403,9 +386,8 @@
         s7Title: 'かくにん',
         sumKind: 'もうしこみ', sumName: 'なまえ', sumNick: 'ニックネーム', sumCountry: 'くに', sumAddr: 'すんでいる ところ',
         sumMobile: 'でんわ', sumRoles: 'さんかの しかた', sumType: '{会員|かいいん}の しゅるい', sumIns: 'ほけん',
-        minorQ: '18さい みまんです',
-        guardianQ: 'ほごしゃ（おや など）が どういしています',
-        consentText: 'かいた じょうほうは、{会員|かいいん}の かんり、{会費|かいひ}・ほけんの てつづき、かつどうの おしらせ、{地球人|ちきゅうじん}ネットワーク{全体|ぜんたい}の しゅうけい（なまえや れんらくさきは つかいません）に つかいます。ほかの ひとには わたしません。',
+        minorQ: '18さい みまんです（うけつけで ほごしゃに かくにん します）',
+        consentText: 'かいた じょうほうは、{会員|かいいん}の かんり、{会費|かいひ}・ほけんの てつづき、かつどうの おしらせ、{地球人|ちきゅうじん}ネットワーク{全体|ぜんたい}の しゅうけいに つかいます（なまえや れんらくさきは つかいません）。ほかの {人|ひと}には わたしません。',
         consentQ: 'どういします',
         doneTitle: 'ありがとうございます',
         doneText: 'はじめて くる {日|ひ}に、うけつけで なまえを いってください。そのとき {会員証|かいいんしょう}を わたします。',
@@ -427,10 +409,8 @@
         memberNoQ: 'Member No.',
         memberNoHint: 'If you know it. You only need to fill in what has changed.',
         s2Title: 'Your name',
-        legalQ: 'Name as in your passport (Roman letters)', legalTag: 'Not needed for Japanese nationals',
-        legalHint: 'Write it exactly as on your passport or residence card.',
-        nameLocalQ: 'Name in Katakana or Kanji',
-        nameLocalHint: 'The name you use in Japan.',
+        legalQ: 'Full name',
+        legalHint: 'Exactly as on your passport or residence card (Roman letters). Japanese nationals: in kanji.',
         kanaQ: 'Reading (Katakana)',
         nickQ: 'What should we call you? (nickname)',
         nickHint: 'Shown large on your membership card.',
@@ -447,8 +427,6 @@
         s4Title: 'Contact',
         mobileQ: 'Mobile phone',
         emailQ: 'Email',
-        lineQ: 'LINE display name',
-        lineHint: 'The name shown in our group LINE',
         s5Title: 'Activities',
         rolesQ: 'How would you like to take part?',
         roleLearner: 'I want to learn Japanese',
@@ -473,8 +451,7 @@
         s7Title: 'Please check',
         sumKind: 'Application', sumName: 'Name', sumNick: 'Nickname', sumCountry: 'Country', sumAddr: 'Address',
         sumMobile: 'Phone', sumRoles: 'Taking part as', sumType: 'Membership', sumIns: 'Insurance',
-        minorQ: 'I am under 18',
-        guardianQ: 'My parent or guardian agrees',
+        minorQ: 'I am under 18 (we will check with your parent/guardian at the reception)',
         consentText: 'We use your information for membership management, fees and insurance, activity announcements, and anonymous statistics across Chikyujin Network (without names or contact details). We do not give it to anyone else.',
         consentQ: 'I agree',
         doneTitle: 'Thank you!',
@@ -595,7 +572,7 @@
     function buildSummary() {
       const rows = [
         ['sumKind', labelOf('kind', checked('kind')[0])],
-        ['sumName', [val('nameLocal'), val('legalName')].filter(Boolean).join(' ／ ')],
+        ['sumName', val('legalName')],
         ['sumNick', val('nickname')],
         ['sumCountry', countryLabel()],
         ['sumAddr', [val('postal'), muniLabel(), val('address')].filter(Boolean).join(' ')],
@@ -621,7 +598,6 @@
       $('#residentBox').hidden = checked('insurance')[0] !== 'want';
       $('#countryOther').hidden = checked('country')[0] !== 'other';
       $('#muniOther').hidden = checked('municipality')[0] !== 'other';
-      $('#guardianBox').hidden = !$('#minor').checked;
     });
     form.addEventListener('input', (e) => e.target.closest('.field')?.classList.remove('invalid'));
 
