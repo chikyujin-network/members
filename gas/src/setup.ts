@@ -14,10 +14,7 @@ export function setupSpreadsheet(): string {
   if (!id) throw new Error('スクリプトプロパティ SPREADSHEET_ID が設定されていません');
   const ss = SpreadsheetApp.openById(id);
   const log: string[] = [];
-  const maintainers = (PropertiesService.getScriptProperties().getProperty('MAINTAINER_EMAILS') ?? '')
-    .split(/[,\s]+/)
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
+  const maintainers = readMaintainers();
 
   ALL_SHEETS.forEach((def, i) => {
     let sheet = ss.getSheetByName(def.name);
@@ -84,9 +81,22 @@ function seedIfEmpty(sheet: GoogleAppsScript.Spreadsheet.Sheet, def: SheetDef, l
   log.push(`初期データ: ${def.name}（${values.length}行）`);
 }
 
+/** スクリプトプロパティ MAINTAINER_EMAILS（カンマ区切り）を読む */
+export function readMaintainers(): string[] {
+  return (PropertiesService.getScriptProperties().getProperty('MAINTAINER_EMAILS') ?? '')
+    .split(/[,\s]+/)
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+}
+
 function protectSheet(sheet: GoogleAppsScript.Spreadsheet.Sheet, def: SheetDef, maintainers: string[]): void {
+  protectSheetRaw(sheet, `${def.name}：画面からだけ更新する。直接編集できるのは保守担当だけ`, maintainers);
+}
+
+/** シート全体を保護し、直接編集できる人を持ち主と保守担当だけにする */
+export function protectSheetRaw(sheet: GoogleAppsScript.Spreadsheet.Sheet, description: string, maintainers: string[]): void {
   const protection = sheet.getProtections(SpreadsheetApp.ProtectionType.SHEET)[0] ?? sheet.protect();
-  protection.setDescription(`${def.name}：画面からだけ更新する。直接編集できるのは保守担当だけ`);
+  protection.setDescription(description);
   protection.setWarningOnly(false);
   const others = protection.getEditors().filter((u) => !maintainers.includes(u.getEmail().toLowerCase()));
   if (others.length) protection.removeEditors(others);

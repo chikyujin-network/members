@@ -21,13 +21,17 @@ export function parseMemberNo(memberNo: string): { branchCode: string; sequence:
   return { branchCode: m[1], sequence: Number(m[2]) };
 }
 
+/** 90000番台はテスト用のダミーデータに使う（domain/dummy.ts）。本物の会員の採番では無視する */
+export const DUMMY_SEQUENCE_FROM = 90000;
+
 /**
  * 次の連番を返す。退会した人の番号も含めて、使った番号は再利用しない。
+ * ダミーデータの番号（90000番台）は数えない。
  * 実際の採番は、同時に2人分振らないよう GAS の LockService の中で呼ぶこと。
  */
 export function nextSequence(usedSequences: readonly number[]): number {
-  const max = usedSequences.reduce((a, b) => Math.max(a, b), FIRST_SEQUENCE - 1);
+  const max = usedSequences.filter((n) => n < DUMMY_SEQUENCE_FROM).reduce((a, b) => Math.max(a, b), FIRST_SEQUENCE - 1);
   const next = max + 1;
-  if (next > MAX_SEQUENCE) throw new Error('会員番号の連番が上限に達しました');
+  if (next >= DUMMY_SEQUENCE_FROM) throw new Error('会員番号の連番が上限に達しました');
   return next;
 }

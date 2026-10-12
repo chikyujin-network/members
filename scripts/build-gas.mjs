@@ -18,6 +18,11 @@ await build({
       'function doPost(e) { return App.doPost(e); }',
       '/** シートと見出しを作る（エディタから実行） */',
       'function setupSpreadsheet() { return App.setupSpreadsheet(); }',
+      '/** 名簿・会費状況などのビューを作り直す（エディタから実行） */',
+      'function refreshViews() { return App.refreshViews(); }',
+      '/** テスト用：ダミーデータを入れる／消す（ALLOW_DUMMY=true のときだけ） */',
+      'function seedDummyData() { return App.seedDummyData(); }',
+      'function clearDummyData() { return App.clearDummyData(); }',
     ].join('\n'),
   },
 });

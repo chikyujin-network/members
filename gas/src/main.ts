@@ -10,6 +10,8 @@
 
 import { verifyStaff } from './auth';
 export { setupSpreadsheet } from './setup';
+export { refreshViews } from './views';
+export { seedDummyData, clearDummyData } from './devtools';
 
 type Json = Record<string, unknown>;
 
