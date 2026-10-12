@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#5893d1">
+  <title>会員申込｜地球人ネットワークinこまがね</title>
+  <link rel="icon" href="../assets/brand/favicon.ico">
+  <link rel="apple-touch-icon" href="../assets/brand/apple-touch-icon.png">
+  <style>
+    :root {
+      --blue: #5893d1;
+      --blue-soft: #e8f0fa;
+      --yellow: #e2bd5c;
+      --navy: #242c6c;
+      --lavender: #c5cbe7;
+      --paper: #f6f8fc;
+      --ink: #1d2340;
+      --muted: #5a6080;
+      --error: #b3261e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Hiragino Maru Gothic ProN', 'Hiragino Sans', 'Noto Sans JP', system-ui, sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      line-height: 1.6;
+      font-size: 16px; /* iPhone で入力時に拡大されないよう16px以上 */
+    }
+    rt { font-size: 0.55em; color: var(--muted); }
+    header {
+      position: sticky; top: 0; z-index: 2;
+      background: var(--blue); color: #fff;
+      padding: 10px 16px 12px;
+    }
+    .head-row { display: flex; align-items: center; gap: 10px; max-width: 560px; margin: 0 auto; }
+    .head-row img { width: 40px; height: 40px; }
+    .head-title { flex: 1; font-weight: 700; font-size: 0.95rem; line-height: 1.3; }
+    .lang { display: flex; gap: 6px; flex-wrap: wrap; max-width: 560px; margin: 8px auto 0; }
+    .lang button {
+      border: 1px solid rgba(255,255,255,0.7); background: transparent; color: #fff;
+      border-radius: 999px; padding: 2px 10px; font-size: 0.8rem;
+    }
+    .lang button[aria-pressed="true"] { background: #fff; color: var(--navy); font-weight: 700; }
+    .lang button:disabled { opacity: 0.45; }
+    .progress { max-width: 560px; margin: 10px auto 0; height: 6px; background: rgba(255,255,255,0.35); border-radius: 999px; overflow: hidden; }
+    .progress div { height: 100%; background: var(--yellow); width: 0; transition: width .25s; }
+    main { max-width: 560px; margin: 0 auto; padding: 16px 16px 120px; }
+    .sample-banner {
+      background: var(--yellow); color: var(--navy); font-weight: 700; text-align: center;
+      padding: 6px 12px; border-radius: 999px; font-size: 0.85rem; margin-bottom: 14px;
+    }
+    .step-label { font-size: 0.85rem; color: var(--muted); }
+    h1 { font-size: 1.45rem; color: var(--navy); margin: 2px 0 16px; line-height: 1.4; }
+    .field { background: #fff; border: 1px solid var(--lavender); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+    .field > label, .field > .q { display: block; font-weight: 700; margin-bottom: 6px; }
+    .req { display: inline-block; font-size: 0.7rem; background: var(--navy); color: #fff; border-radius: 4px; padding: 0 6px; margin-left: 6px; vertical-align: 2px; }
+    .opt { display: inline-block; font-size: 0.7rem; background: var(--lavender); color: var(--navy); border-radius: 4px; padding: 0 6px; margin-left: 6px; vertical-align: 2px; }
+    .hint { font-size: 0.85rem; color: var(--muted); margin: -2px 0 8px; }
+    input[type=text], input[type=tel], input[type=email], select, textarea {
+      width: 100%; font: inherit; font-size: 16px; padding: 12px; border: 1.5px solid var(--lavender);
+      border-radius: 10px; background: #fff; color: var(--ink);
+    }
+    input:focus, select:focus, textarea:focus { outline: 3px solid var(--blue-soft); border-color: var(--blue); }
+    .choices { display: grid; gap: 8px; }
+    .choice {
+      display: flex; align-items: center; gap: 10px; padding: 12px; border: 1.5px solid var(--lavender);
+      border-radius: 10px; background: #fff; cursor: pointer;
+    }
+    .choice input { width: 22px; height: 22px; accent-color: var(--navy); flex: none; }
+    .choice:has(input:checked) { border-color: var(--navy); background: var(--blue-soft); }
+    .choice small { display: block; color: var(--muted); font-size: 0.8rem; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .invalid input, .invalid select, .invalid .choice { border-color: var(--error); }
+    .err { color: var(--error); font-size: 0.85rem; margin-top: 6px; display: none; }
+    .invalid .err { display: block; }
+    .nav {
+      position: fixed; left: 0; right: 0; bottom: 0; background: rgba(246,248,252,0.96);
+      border-top: 1px solid var(--lavender); padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    }
+    .nav-inner { max-width: 560px; margin: 0 auto; display: flex; gap: 10px; }
+    .nav button { font: inherit; font-weight: 700; padding: 14px; border-radius: 12px; border: 0; }
+    .back { background: #fff; color: var(--navy); border: 1.5px solid var(--lavender) !important; flex: 1; }
+    .next { background: var(--navy); color: #fff; flex: 2; }
+    .summary { background: #fff; border: 1px solid var(--lavender); border-radius: 14px; padding: 4px 14px; margin-bottom: 12px; }
+    .summary div { display: grid; grid-template-columns: 40% 1fr; gap: 8px; padding: 10px 0; border-bottom: 1px dashed var(--lavender); }
+    .summary div:last-child { border-bottom: 0; }
+    .summary dt { color: var(--muted); font-size: 0.85rem; }
+    .summary dd { margin: 0; word-break: break-word; }
+    .consent-text { font-size: 0.85rem; background: var(--blue-soft); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+    .done { text-align: center; padding: 30px 10px; }
+    .done .big { font-size: 3rem; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="head-row">
+      <img src="../assets/brand/logo-komagane.png" alt="">
+      <div class="head-title" data-t="orgTitle"></div>
+    </div>
+    <div class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="ja" aria-pressed="true">にほんご</button>
+        <button type="button" data-lang="en" aria-pressed="false">English</button>
+        <button type="button" disabled title="準備中">Tiếng Việt</button>
+        <button type="button" disabled title="準備中">Indonesia</button>
+    </div>
+    <div class="progress"><div id="bar"></div></div>
+  </header>
+
+  <main>
+    <div class="sample-banner" data-t="sample"></div>
+
+    <form id="form" novalidate>
+      <!-- 1. はじめに -->
+      <section class="step" data-step="1">
+        <div class="step-label" data-t="stepOf"></div>
+        <h1 data-t="s1Title"></h1>
+        <div class="field" data-required="kind">
+          <div class="q"><span data-t="kindQ"></span><span class="req" data-t="req"></span></div>
+          <div class="choices">
+            <label class="choice"><input type="radio" name="kind" value="new"><span data-t="kindNew"></span></label>
+            <label class="choice"><input type="radio" name="kind" value="return"><span data-t="kindReturn"></span></label>
+          </div>
+          <div class="err" data-t="errChoose"></div>
+        </div>
+        <div class="field" id="returnBox" hidden>
+          <label for="memberNo"><span data-t="memberNoQ"></span><span class="opt" data-t="opt"></span></label>
+          <p class="hint" data-t="memberNoHint"></p>
+          <input type="text" id="memberNo" name="memberNo" inputmode="numeric" placeholder="001-00123">
+        </div>
+      </section>
+
+      <!-- 2. なまえ -->
+      <section class="step" data-step="2" hidden>
+        <div class="step-label" data-t="stepOf"></div>
+        <h1 data-t="s2Title"></h1>
+        <div class="field">
+          <label for="legalName"><span data-t="legalQ"></span><span class="opt" data-t="legalTag"></span></label>
+          <p class="hint" data-t="legalHint"></p>
+          <input type="text" id="legalName" name="legalName" autocomplete="name" placeholder="NGUYEN Thi Lan" autocapitalize="characters">
+        </div>
+        <div class="field" data-required="nameLocal">
+          <label for="nameLocal"><span data-t="nameLocalQ"></span><span class="req" data-t="req"></span></label>
+          <p class="hint" data-t="nameLocalHint"></p>
+          <input type="text" id="nameLocal" name="nameLocal" placeholder="グエン ティ ラン ／ 山田 花子">
+          <div class="err" data-t="errInput"></div>
+        </div>
+        <div class="field" data-required="kana">
+          <label for="kana"><span data-t="kanaQ"></span><span class="req" data-t="req"></span></label>
+          <input type="text" id="kana" name="kana" placeholder="グエン ティ ラン ／ ヤマダ ハナコ">
+          <div class="err" data-t="errInput"></div>
+        </div>
+        <div class="field" data-required="nickname">
+          <label for="nickname"><span data-t="nickQ"></span><span class="req" data-t="req"></span></label>
+          <p class="hint" data-t="nickHint"></p>
+          <input type="text" id="nickname" name="nickname" placeholder="ラン ／ Lan">
+          <div class="err" data-t="errInput"></div>
+        </div>
+        <div class="field">
+          <label for="altName"><span data-t="altQ"></span><span class="opt" data-t="opt"></span></label>
+          <p class="hint" data-t="altHint"></p>
+          <input type="text" id="altName" name="altName">
+        </div>
+      </section>
+
+      <!-- 3. くに・すんでいるところ -->
+      <section class="step" data-step="3" hidden>
+        <div class="step-label" data-t="stepOf"></div>
+        <h1 data-t="s3Title"></h1>
+        <div class="field" data-required="country">
+          <label for="country"><span data-t="countryQ"></span><span class="req" data-t="req"></span></label>
+          <select id="country" name="country"></select>
+          <div class="err" data-t="errChoose"></div>
+        </div>
+        <div class="field" data-required="municipality">
+          <div class="q"><span data-t="addrQ"></span><span class="req" data-t="req"></span></div>
+          <p class="hint" data-t="addrHint"></p>
+          <div class="row2">
+            <input type="text" id="postal" name="postal" inputmode="numeric" autocomplete="postal-code" placeholder="399-4117">
+            <select id="municipality" name="municipality"></select>
+          </div>
+          <input type="text" id="address" name="address" style="margin-top:8px" data-ph="addrPh">
+          <div class="err" data-t="errChoose"></div>
+        </div>
+      </section>
+
+      <!-- 4. れんらくさき -->
+      <section class="step" data-step="4" hidden>
+        <div class="step-label" data-t="stepOf"></div>
+        <h1 data-t="s4Title"></h1>
+        <div class="field" data-required="mobile">
+          <label for="mobile"><span data-t="mobileQ"></span><span class="req" data-t="req"></span></label>
+          <input type="tel" id="mobile" name="mobile" autocomplete="tel" placeholder="090-1234-5678">
+          <div class="err" data-t="errInput"></div>
+        </div>
+        <div class="field">
+          <label for="email"><span data-t="emailQ"></span><span class="opt" data-t="opt"></span></label>
+          <input type="email" id="email" name="email" autocomplete="email" placeholder="name@example.com">
+        </div>
+        <div class="field">
+          <label for="lineName"><span data-t="lineQ"></span><span class="opt" data-t="opt"></span></label>
+          <p class="hint" data-t="lineHint"></p>
+          <input type="text" id="lineName" name="lineName">
+        </div>
+      </section>
+
+      <!-- 5. かつどう -->
+      <section class="step" data-step="5" hidden>
+        <div class="step-label" data-t="stepOf"></div>
+        <h1 data-t="s5Title"></h1>
+        <div class="field" data-required="roles">
+          <div class="q"><span data-t="rolesQ"></span><span class="req" data-t="req"></span></div>
+          <p class="hint" data-t="multi"></p>
+          <div class="choices">
+            <label class="choice"><input type="checkbox" name="roles" value="learner"><span data-t="roleLearner"></span></label>
+            <label class="choice"><input type="checkbox" name="roles" value="volunteer"><span data-t="roleVolunteer"></span></label>
+            <label class="choice"><input type="checkbox" name="roles" value="staff"><span data-t="roleStaff"></span></label>
+          </div>
+          <div class="err" data-t="errChoose"></div>
+        </div>
+        <div class="field">
+          <div class="q"><span data-t="actQ"></span><span class="opt" data-t="opt"></span></div>
+          <p class="hint" data-t="multi"></p>
+          <div class="choices">
+            <label class="choice"><input type="checkbox" name="activities" value="class"><span data-t="actClass"></span></label>
+            <label class="choice"><input type="checkbox" name="activities" value="event"><span data-t="actEvent"></span></label>
+            <label class="choice"><input type="checkbox" name="activities" value="lecture"><span data-t="actLecture"></span></label>
+            <label class="choice"><input type="checkbox" name="activities" value="farm"><span data-t="actFarm"></span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label for="goal"><span data-t="goalQ"></span><span class="opt" data-t="opt"></span></label>
+          <input type="text" id="goal" name="goal" data-ph="goalPh">
+        </div>
+        <div class="field" data-required="type">
+          <div class="q"><span data-t="typeQ"></span><span class="req" data-t="req"></span></div>
+          <div class="choices">
+            <label class="choice"><input type="radio" name="type" value="general"><span><span data-t="typeGeneral"></span><small data-t="typeGeneralNote"></small></span></label>
+            <label class="choice"><input type="radio" name="type" value="supporting"><span><span data-t="typeSupporting"></span><small data-t="typeSupportingNote"></small></span></label>
+          </div>
+          <div id="unitsBox" hidden style="margin-top:8px">
+            <label for="units" data-t="unitsQ"></label>
+            <select id="units" name="units"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+          </div>
+          <div class="err" data-t="errChoose"></div>
+        </div>
+      </section>
+
+      <!-- 6. ほけん -->
+      <section class="step" data-step="6" hidden>
+        <div class="step-label" data-t="stepOf"></div>
+        <h1 data-t="s6Title"></h1>
+        <p class="hint" data-t="insIntro"></p>
+        <div class="field" data-required="insurance">
+          <div class="q"><span data-t="insQ"></span><span class="req" data-t="req"></span></div>
+          <div class="choices">
+            <label class="choice"><input type="radio" name="insurance" value="want"><span data-t="insWant"></span></label>
+            <label class="choice"><input type="radio" name="insurance" value="other"><span data-t="insOther"></span></label>
+            <label class="choice"><input type="radio" name="insurance" value="no"><span data-t="insNo"></span></label>
+          </div>
+          <div class="err" data-t="errChoose"></div>
+        </div>
+        <div class="field" id="residentBox" data-required="resident" hidden>
+          <div class="q"><span data-t="residentQ"></span><span class="req" data-t="req"></span></div>
+          <p class="hint" data-t="residentHint"></p>
+          <div class="choices">
+            <label class="choice"><input type="radio" name="resident" value="yes"><span data-t="yes"></span></label>
+            <label class="choice"><input type="radio" name="resident" value="no"><span data-t="no"></span></label>
+          </div>
+          <div class="err" data-t="errChoose"></div>
+        </div>
+      </section>
+
+      <!-- 7. かくにん -->
+      <section class="step" data-step="7" hidden>
+        <div class="step-label" data-t="stepOf"></div>
+        <h1 data-t="s7Title"></h1>
+        <dl class="summary" id="summary"></dl>
+        <div class="field">
+          <label class="choice"><input type="checkbox" id="minor" name="minor"><span data-t="minorQ"></span></label>
+          <div id="guardianBox" hidden style="margin-top:8px">
+            <label class="choice"><input type="checkbox" id="guardian" name="guardian"><span data-t="guardianQ"></span></label>
+          </div>
+        </div>
+        <div class="field" data-required="consent">
+          <div class="consent-text" data-t="consentText"></div>
+          <label class="choice"><input type="checkbox" id="consent" name="consent"><span data-t="consentQ"></span></label>
+          <div class="err" data-t="errConsent"></div>
+        </div>
+      </section>
+
+      <!-- 送信後 -->
+      <section class="step" data-step="8" hidden>
+        <div class="done">
+          <div class="big">🌏</div>
+          <h1 data-t="doneTitle"></h1>
+          <p data-t="doneText"></p>
+          <p class="hint" data-t="doneSample"></p>
+        </div>
+      </section>
+    </form>
+  </main>
+
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <button type="button" class="back" id="back" data-t="back"></button>
+      <button type="button" class="next" id="next" data-t="next"></button>
+    </div>
+  </nav>
+
+  <script>
+    // やさしい日本語は {漢字|かんじ} でふりがなを付ける
+    const I18N = {
+      ja: {
+        orgTitle: '{地球人|ちきゅうじん}ネットワークinこまがね<br>{会員|かいいん}の もうしこみ',
+        sample: '{見本|みほん}です。おくっても とうろく されません ／ SAMPLE',
+        stepOf: 'ステップ {n} / 7',
+        req: 'ひっす', opt: 'なくても よい',
+        next: 'つぎへ', back: 'もどる', submit: 'おくる',
+        errChoose: 'えらんでください', errInput: 'かいてください', errConsent: 'どういが ひつようです',
+        multi: 'いくつ えらんでも いいです',
+        yes: 'はい', no: 'いいえ',
+        s1Title: 'はじめに',
+        kindQ: 'どちらですか',
+        kindNew: 'はじめて {会員|かいいん}に なります',
+        kindReturn: 'まえに {会員|かいいん}でした（ひさしぶりに きました）',
+        memberNoQ: '{会員番号|かいいんばんごう}',
+        memberNoHint: 'わかれば かいてください。かわったところ だけ かけば いいです。',
+        s2Title: 'なまえ',
+        legalQ: 'パスポートの なまえ（ローマじ）', legalTag: '{日本|にほん}の ひとは なくても よい',
+        legalHint: 'パスポートや ざいりゅうカードと おなじに かいてください。',
+        nameLocalQ: 'なまえ（カタカナ または {漢字|かんじ}）',
+        nameLocalHint: '{日本|にほん}で つかう なまえを かいてください。',
+        kanaQ: 'よみかた（カタカナ）',
+        nickQ: 'よんで ほしい なまえ（ニックネーム）',
+        nickHint: '{会員証|かいいんしょう}に {大|おお}きく でます。',
+        altQ: 'ほかの なまえ',
+        altHint: '{結婚|けっこん}する まえの なまえ など。さがす ときに つかいます。',
+        s3Title: 'くにと すんでいる ところ',
+        countryQ: 'しゅっしんの くに',
+        countryPick: 'えらんでください', countryOther: 'その{他|た}',
+        addrQ: 'すんでいる ところ',
+        addrHint: 'ゆうびんばんごう、{市町村|しちょうそん}、そのあと',
+        addrPh: '{番地|ばんち}・たてもの・へやばんごう',
+        muniPick: '{市町村|しちょうそん}',
+        s4Title: 'れんらくさき',
+        mobileQ: 'けいたい{電話|でんわ}',
+        emailQ: 'メール',
+        lineQ: 'LINEの なまえ',
+        lineHint: 'グループLINEで {見|み}える なまえ',
+        s5Title: 'かつどう',
+        rolesQ: 'どのように さんか しますか',
+        roleLearner: '{日本語|にほんご}を べんきょう したい',
+        roleVolunteer: '{日本語|にほんご}ボランティアを したい',
+        roleStaff: 'うんえいを てつだいたい',
+        actQ: 'さんか したい かつどう',
+        actClass: '{日本語教室|にほんごきょうしつ}', actEvent: 'こうりゅうイベント', actLecture: 'こうざ（ぜいきん・ぼうさい など）', actFarm: 'のうえん',
+        goalQ: '{日本語|にほんご}の もくひょう',
+        goalPh: 'れい：JLPT N3を うけたい',
+        typeQ: '{会員|かいいん}の しゅるい',
+        typeGeneral: 'いっぱん{会員|かいいん}', typeGeneralNote: '{年会費|ねんかいひ} 500{円|えん}',
+        typeSupporting: 'さんじょ{会員|かいいん}', typeSupportingNote: '1くち 500{円|えん}（なんくちでも よい）',
+        unitsQ: 'なんくち',
+        s6Title: 'ボランティアほけん',
+        insIntro: 'かつどうちゅうの けが などの ための ほけんです。1{年|ねん} 330{円|えん}。はいらなくても {会員|かいいん}に なれます。',
+        insQ: 'ほけんに はいりますか',
+        insWant: 'はいりたい（うけつけで はらいます）',
+        insOther: 'ほかの だんたいで もう はいっている',
+        insNo: 'はいらない',
+        residentQ: 'じゅうみんひょうは {駒ヶ根市|こまがねし}に ありますか',
+        residentHint: 'ほけんりょうの ほじょの ために ききます。',
+        s7Title: 'かくにん',
+        sumKind: 'もうしこみ', sumName: 'なまえ', sumNick: 'ニックネーム', sumCountry: 'くに', sumAddr: 'すんでいる ところ',
+        sumMobile: 'でんわ', sumRoles: 'さんかの しかた', sumType: '{会員|かいいん}の しゅるい', sumIns: 'ほけん',
+        minorQ: '18さい みまんです',
+        guardianQ: 'ほごしゃ（おや など）が どういしています',
+        consentText: 'かいた じょうほうは、{会員|かいいん}の かんり、{会費|かいひ}・ほけんの てつづき、かつどうの おしらせ、{地球人|ちきゅうじん}ネットワーク{全体|ぜんたい}の しゅうけい（なまえや れんらくさきは つかいません）に つかいます。ほかの ひとには わたしません。',
+        consentQ: 'どういします',
+        doneTitle: 'ありがとうございます',
+        doneText: 'はじめて くる {日|ひ}に、うけつけで なまえを いってください。そのとき {会員証|かいいんしょう}を わたします。',
+        doneSample: '（{見本|みほん}なので、どこにも おくられていません）',
+      },
+      en: {
+        orgTitle: 'Chikyujin Network in Komagane<br>Membership application',
+        sample: 'This is a SAMPLE. Nothing will be registered.',
+        stepOf: 'Step {n} of 7',
+        req: 'Required', opt: 'Optional',
+        next: 'Next', back: 'Back', submit: 'Submit',
+        errChoose: 'Please choose one', errInput: 'Please fill in', errConsent: 'Your consent is required',
+        multi: 'Choose all that apply',
+        yes: 'Yes', no: 'No',
+        s1Title: 'Getting started',
+        kindQ: 'Which applies to you?',
+        kindNew: 'I am joining for the first time',
+        kindReturn: 'I was a member before and am coming back',
+        memberNoQ: 'Member No.',
+        memberNoHint: 'If you know it. You only need to fill in what has changed.',
+        s2Title: 'Your name',
+        legalQ: 'Name as in your passport (Roman letters)', legalTag: 'Not needed for Japanese nationals',
+        legalHint: 'Write it exactly as on your passport or residence card.',
+        nameLocalQ: 'Name in Katakana or Kanji',
+        nameLocalHint: 'The name you use in Japan.',
+        kanaQ: 'Reading (Katakana)',
+        nickQ: 'What should we call you? (nickname)',
+        nickHint: 'Shown large on your membership card.',
+        altQ: 'Other names',
+        altHint: 'e.g. name before marriage. Used only for searching.',
+        s3Title: 'Country and address',
+        countryQ: 'Country of origin',
+        countryPick: 'Please choose', countryOther: 'Other',
+        addrQ: 'Where you live',
+        addrHint: 'Postal code, city/town, then the rest',
+        addrPh: 'Street number, building, room',
+        muniPick: 'City / Town',
+        s4Title: 'Contact',
+        mobileQ: 'Mobile phone',
+        emailQ: 'Email',
+        lineQ: 'LINE display name',
+        lineHint: 'The name shown in our group LINE',
+        s5Title: 'Activities',
+        rolesQ: 'How would you like to take part?',
+        roleLearner: 'I want to learn Japanese',
+        roleVolunteer: 'I want to volunteer as a Japanese partner',
+        roleStaff: 'I want to help run the group',
+        actQ: 'Activities you are interested in',
+        actClass: 'Japanese class', actEvent: 'Social events', actLecture: 'Workshops (tax, disaster prevention, etc.)', actFarm: 'Farm',
+        goalQ: 'Your Japanese goal',
+        goalPh: 'e.g. Pass JLPT N3',
+        typeQ: 'Membership type',
+        typeGeneral: 'Regular member', typeGeneralNote: '500 yen per year',
+        typeSupporting: 'Supporting member', typeSupportingNote: '500 yen per unit (any number of units)',
+        unitsQ: 'Number of units',
+        s6Title: 'Volunteer insurance',
+        insIntro: 'Insurance for injuries during activities. 330 yen per year. You can be a member without it.',
+        insQ: 'Do you want to join the insurance?',
+        insWant: 'Yes (pay at the reception)',
+        insOther: 'I already have it through another group',
+        insNo: 'No',
+        residentQ: 'Is your resident registration in Komagane City?',
+        residentHint: 'We ask this for the insurance subsidy.',
+        s7Title: 'Please check',
+        sumKind: 'Application', sumName: 'Name', sumNick: 'Nickname', sumCountry: 'Country', sumAddr: 'Address',
+        sumMobile: 'Phone', sumRoles: 'Taking part as', sumType: 'Membership', sumIns: 'Insurance',
+        minorQ: 'I am under 18',
+        guardianQ: 'My parent or guardian agrees',
+        consentText: 'We use your information for membership management, fees and insurance, activity announcements, and anonymous statistics across Chikyujin Network (without names or contact details). We do not give it to anyone else.',
+        consentQ: 'I agree',
+        doneTitle: 'Thank you!',
+        doneText: 'On your first visit, please tell your name at the reception. We will give you your membership card.',
+        doneSample: '(This is a sample, so nothing was sent.)',
+      },
+    };
+
+    const COUNTRIES = [
+      ['VN', 'ベトナム', 'Vietnam'], ['ID', 'インドネシア', 'Indonesia'], ['PH', 'フィリピン', 'Philippines'],
+      ['JP', 'にほん', 'Japan'], ['CN', 'ちゅうごく', 'China'], ['TH', 'タイ', 'Thailand'], ['BR', 'ブラジル', 'Brazil'],
+      ['PE', 'ペルー', 'Peru'], ['NP', 'ネパール', 'Nepal'], ['KR', 'かんこく', 'Korea'], ['IN', 'インド', 'India'],
+      ['LK', 'スリランカ', 'Sri Lanka'], ['US', 'アメリカ', 'USA'],
+    ];
+    const MUNICIPALITIES = ['駒ヶ根市', '飯島町', '宮田村', '中川村', '伊那市', '箕輪町', '南箕輪村', '松川町', '高森町'];
+    const MUNI_EN = { '駒ヶ根市': 'Komagane', '飯島町': 'Iijima', '宮田村': 'Miyada', '中川村': 'Nakagawa', '伊那市': 'Ina', '箕輪町': 'Minowa', '南箕輪村': 'Minamiminowa', '松川町': 'Matsukawa', '高森町': 'Takamori' };
+
+    let lang = 'ja';
+    let step = 1;
+    const TOTAL = 7;
+    const $ = (s) => document.querySelector(s);
+    const $$ = (s) => [...document.querySelectorAll(s)];
+    const form = $('#form');
+
+    function ruby(s) {
+      return s.replace(/\{([^|}]+)\|([^}]+)\}/g, '<ruby>$1<rt>$2</rt></ruby>');
+    }
+    function t(key, vars = {}) {
+      let s = I18N[lang][key] ?? key;
+      for (const [k, v] of Object.entries(vars)) s = s.replace(`{${k}}`, v);
+      return lang === 'ja' ? ruby(s) : s;
+    }
+    function plain(key) { return t(key).replace(/<rt>.*?<\/rt>/g, '').replace(/<[^>]+>/g, ''); }
+
+    function applyLang() {
+      document.documentElement.lang = lang;
+      $$('[data-t]').forEach((el) => { el.innerHTML = t(el.dataset.t, { n: el.closest('.step')?.dataset.step ?? step }); });
+      $$('[data-ph]').forEach((el) => { el.placeholder = plain(el.dataset.ph); });
+      const c = $('#country'), cv = c.value;
+      c.innerHTML = `<option value="">${plain('countryPick')}</option>` +
+        COUNTRIES.map(([code, ja, en]) => `<option value="${code}">${lang === 'ja' ? ja : en}</option>`).join('') +
+        `<option value="other">${plain('countryOther')}</option>`;
+      c.value = cv;
+      const m = $('#municipality'), mv = m.value;
+      m.innerHTML = `<option value="">${plain('muniPick')}</option>` +
+        MUNICIPALITIES.map((x) => `<option value="${x}">${lang === 'ja' ? x : MUNI_EN[x]}</option>`).join('') +
+        `<option value="other">${plain('countryOther')}</option>`;
+      m.value = mv;
+      $$('.lang button[data-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+      if (step === TOTAL) buildSummary();
+      updateNav();
+    }
+
+    function updateNav() {
+      $('#back').style.visibility = step > 1 && step <= TOTAL ? 'visible' : 'hidden';
+      $('#next').innerHTML = step === TOTAL ? t('submit') : t('next');
+      $('#nav').hidden = step > TOTAL;
+      $('#bar').style.width = `${Math.min(step, TOTAL) / TOTAL * 100}%`;
+    }
+
+    function show(n) {
+      step = n;
+      $$('.step').forEach((s) => { s.hidden = Number(s.dataset.step) !== n; });
+      if (n === TOTAL) buildSummary();
+      updateNav();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    const val = (name) => form.elements[name]?.value?.trim?.() ?? '';
+    const checked = (name) => $$(`input[name="${name}"]:checked`).map((i) => i.value);
+
+    function validate(n) {
+      let ok = true;
+      $$(`.step[data-step="${n}"] [data-required]`).forEach((f) => {
+        if (f.hidden) return;
+        const name = f.dataset.required;
+        const el = form.elements[name];
+        let filled;
+        if (name === 'consent') filled = $('#consent').checked;
+        else if (el instanceof RadioNodeList || $$(`input[name="${name}"][type=checkbox]`).length) filled = checked(name).length > 0;
+        else filled = val(name) !== '';
+        f.classList.toggle('invalid', !filled);
+        if (!filled) ok = false;
+      });
+      if (!ok) $(`.step[data-step="${n}"] .invalid`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return ok;
+    }
+
+    function labelOf(name, value) {
+      const input = $(`input[name="${name}"][value="${value}"]`);
+      const span = input?.closest('.choice')?.querySelector('[data-t]');
+      return span ? plain(span.dataset.t) : (value ?? '');
+    }
+
+    function buildSummary() {
+      const rows = [
+        ['sumKind', labelOf('kind', checked('kind')[0])],
+        ['sumName', [val('nameLocal'), val('legalName')].filter(Boolean).join(' ／ ')],
+        ['sumNick', val('nickname')],
+        ['sumCountry', $('#country').selectedOptions[0]?.text ?? ''],
+        ['sumAddr', [val('postal'), $('#municipality').selectedOptions[0]?.text, val('address')].filter(Boolean).join(' ')],
+        ['sumMobile', val('mobile')],
+        ['sumRoles', checked('roles').map((v) => labelOf('roles', v)).join('、')],
+        ['sumType', labelOf('type', checked('type')[0]) + (checked('type')[0] === 'supporting' ? ` × ${val('units')}` : '')],
+        ['sumIns', labelOf('insurance', checked('insurance')[0])],
+      ];
+      $('#summary').innerHTML = rows.map(([k, v]) => `<div><dt>${t(k)}</dt><dd>${(v || '—').replace(/</g, '&lt;')}</dd></div>`).join('');
+    }
+
+    $('#next').onclick = () => {
+      if (!validate(step)) return;
+      show(step + 1); // 見本なので、最後のステップでもどこにも送らない
+    };
+    $('#back').onclick = () => show(step - 1);
+    $$('.lang button[data-lang]').forEach((b) => (b.onclick = () => { lang = b.dataset.lang; applyLang(); }));
+
+    form.addEventListener('change', (e) => {
+      e.target.closest('.field')?.classList.remove('invalid');
+      $('#returnBox').hidden = checked('kind')[0] !== 'return';
+      $('#unitsBox').hidden = checked('type')[0] !== 'supporting';
+      $('#residentBox').hidden = checked('insurance')[0] !== 'want';
+      $('#guardianBox').hidden = !$('#minor').checked;
+    });
+    form.addEventListener('input', (e) => e.target.closest('.field')?.classList.remove('invalid'));
+
+    applyLang();
+    show(1);
+  </script>
+</body>
+</html>
