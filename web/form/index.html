@@ -91,6 +91,17 @@
     .consent-text { font-size: 0.85rem; background: var(--blue-soft); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
     .done { text-align: center; padding: 30px 10px; }
     .done .big { font-size: 3rem; }
+.flags { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+    .flag {
+      position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px;
+      border: 1.5px solid var(--lavender); border-radius: 12px; background: #fff; cursor: pointer;
+      font-size: 0.85rem; text-align: center; line-height: 1.3;
+    }
+    .flag input { position: absolute; opacity: 0; pointer-events: none; }
+    .flag .emoji { font-size: 2rem; line-height: 1.1; }
+    .flag:has(input:checked) { border-color: var(--navy); background: var(--blue-soft); font-weight: 700; }
+    .flag:has(input:focus-visible) { outline: 3px solid var(--blue); }
+    .invalid .flag { border-color: var(--error); }
     [hidden] { display: none !important; }
   </style>
 </head>
@@ -170,8 +181,9 @@
         <div class="step-label" data-t="stepOf"></div>
         <h1 data-t="s3Title"></h1>
         <div class="field" data-required="country">
-          <label for="country"><span data-t="countryQ"></span><span class="req" data-t="req"></span></label>
-          <select id="country" name="country"></select>
+          <div class="q"><span data-t="countryQ"></span><span class="req" data-t="req"></span></div>
+          <div class="flags" id="countryGrid" role="radiogroup"></div>
+          <input type="text" id="countryOther" name="countryOther" style="margin-top:8px" hidden data-ph="countryOtherPh">
           <div class="err" data-t="errChoose"></div>
         </div>
         <div class="field" data-required="municipality">
@@ -340,7 +352,7 @@
         altHint: '{結婚|けっこん}する まえの なまえ など。さがす ときに つかいます。',
         s3Title: 'くにと すんでいる ところ',
         countryQ: 'しゅっしんの くに',
-        countryPick: 'えらんでください', countryOther: 'その{他|た}',
+        countryPick: 'えらんでください', countryOther: 'その{他|た}', countryOtherPh: 'くにの なまえを かいてください',
         addrQ: 'すんでいる ところ',
         addrHint: 'ゆうびんばんごう、{市町村|しちょうそん}、そのあと',
         addrPh: '{番地|ばんち}・たてもの・へやばんごう',
@@ -409,7 +421,7 @@
         altHint: 'e.g. name before marriage. Used only for searching.',
         s3Title: 'Country and address',
         countryQ: 'Country of origin',
-        countryPick: 'Please choose', countryOther: 'Other',
+        countryPick: 'Please choose', countryOther: 'Other', countryOtherPh: 'Write your country',
         addrQ: 'Where you live',
         addrHint: 'Postal code, city/town, then the rest',
         addrPh: 'Street number, building, room',
@@ -469,6 +481,17 @@
     const $$ = (s) => [...document.querySelectorAll(s)];
     const form = $('#form');
 
+    function flag(code) {
+      return [...code.toUpperCase()].map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65)).join('');
+    }
+    function countryLabel() {
+      const v = checked('country')[0];
+      if (!v) return '';
+      if (v === 'other') return val('countryOther');
+      const c = COUNTRIES.find(([code]) => code === v);
+      return `${flag(v)} ${lang === 'ja' ? c[1] : c[2]}`;
+    }
+
     function ruby(s) {
       return s.replace(/\{([^|}]+)\|([^}]+)\}/g, '<ruby>$1<rt>$2</rt></ruby>');
     }
@@ -483,11 +506,12 @@
       document.documentElement.lang = lang;
       $$('[data-t]').forEach((el) => { el.innerHTML = t(el.dataset.t, { n: el.closest('.step')?.dataset.step ?? step }); });
       $$('[data-ph]').forEach((el) => { el.placeholder = plain(el.dataset.ph); });
-      const c = $('#country'), cv = c.value;
-      c.innerHTML = `<option value="">${plain('countryPick')}</option>` +
-        COUNTRIES.map(([code, ja, en]) => `<option value="${code}">${lang === 'ja' ? ja : en}</option>`).join('') +
-        `<option value="other">${plain('countryOther')}</option>`;
-      c.value = cv;
+      // 国は国旗つきのボタンで選ぶ（国旗は国コードから絵文字で作る）
+      const cv = checked('country')[0];
+      $('#countryGrid').innerHTML =
+        COUNTRIES.map(([code, ja, en]) => `<label class="flag"><input type="radio" name="country" value="${code}"><span class="emoji" aria-hidden="true">${flag(code)}</span><span>${lang === 'ja' ? ja : en}</span></label>`).join('') +
+        `<label class="flag"><input type="radio" name="country" value="other"><span class="emoji" aria-hidden="true">🌏</span><span>${plain('countryOther')}</span></label>`;
+      if (cv) $(`input[name="country"][value="${cv}"]`).checked = true;
       const m = $('#municipality'), mv = m.value;
       m.innerHTML = `<option value="">${plain('muniPick')}</option>` +
         MUNICIPALITIES.map((x) => `<option value="${x}">${lang === 'ja' ? x : MUNI_EN[x]}</option>`).join('') +
@@ -526,6 +550,7 @@
         if (name === 'consent') filled = $('#consent').checked;
         else if (el instanceof RadioNodeList || $$(`input[name="${name}"][type=checkbox]`).length) filled = checked(name).length > 0;
         else filled = val(name) !== '';
+        if (name === 'country' && checked('country')[0] === 'other' && !val('countryOther')) filled = false;
         f.classList.toggle('invalid', !filled);
         if (!filled) ok = false;
       });
@@ -544,7 +569,7 @@
         ['sumKind', labelOf('kind', checked('kind')[0])],
         ['sumName', [val('nameLocal'), val('legalName')].filter(Boolean).join(' ／ ')],
         ['sumNick', val('nickname')],
-        ['sumCountry', $('#country').selectedOptions[0]?.text ?? ''],
+        ['sumCountry', countryLabel()],
         ['sumAddr', [val('postal'), $('#municipality').selectedOptions[0]?.text, val('address')].filter(Boolean).join(' ')],
         ['sumMobile', val('mobile')],
         ['sumRoles', checked('roles').map((v) => labelOf('roles', v)).join('、')],
@@ -566,6 +591,7 @@
       $('#returnBox').hidden = checked('kind')[0] !== 'return';
       $('#unitsBox').hidden = checked('type')[0] !== 'supporting';
       $('#residentBox').hidden = checked('insurance')[0] !== 'want';
+      $('#countryOther').hidden = checked('country')[0] !== 'other';
       $('#guardianBox').hidden = !$('#minor').checked;
     });
     form.addEventListener('input', (e) => e.target.closest('.field')?.classList.remove('invalid'));
