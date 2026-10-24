@@ -217,7 +217,11 @@ export function generateDummyData(opts: DummyOptions): DummyData {
   const exemptDates = recentExemptDates(today, settings.exemptJoinMonths);
 
   const generalType = settings.membershipTypes[0];
-  const supportingType = settings.membershipTypes.find((t) => t.allowMultipleUnits) ?? generalType;
+  const supportingType =
+    settings.membershipTypes.find((t) => t.id === 'supporting') ??
+    settings.membershipTypes.find((t) => t.allowMultipleUnits) ??
+    generalType;
+  const childType = settings.membershipTypes.find((t) => t.feePerUnit === 0);
   if (!generalType) throw new Error('会員種別の設定がありません');
 
   const members: Record<string, string>[] = [];
@@ -262,8 +266,8 @@ export function generateDummyData(opts: DummyOptions): DummyData {
     const email = rng.chance(0.15) ? `user${i}@example.com` : '';
 
     // 会員種別・役割・活動
-    const isSupporting = rng.chance(0.05);
-    const type = isSupporting ? supportingType : generalType;
+    const typeRoll = rng.float();
+    const type = childType && typeRoll < 0.03 ? childType : typeRoll < 0.08 ? supportingType : generalType;
     let roleSet: string[];
     if (isJapanese) {
       roleSet = rng.weighted<string[]>([
@@ -319,7 +323,7 @@ export function generateDummyData(opts: DummyOptions): DummyData {
       const hi = minDate(range.end, today);
       const receivedDate = addDays(lo, rng.int(Math.max(daysBetween(lo, hi), 0) + 1));
       const receivedBy = rng.pick(STAFF_NAMES);
-      const exempt = isJoinFy && settings.exemptJoinMonths.includes(joinMonth);
+      const exempt = (isJoinFy && settings.exemptJoinMonths.includes(joinMonth)) || type.feePerUnit === 0;
       const units = !exempt && type.allowMultipleUnits ? rng.between(1, 3) : 1;
       const amount = exempt ? 0 : type.feePerUnit * units;
       const handed =

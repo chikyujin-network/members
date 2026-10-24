@@ -66,9 +66,23 @@ describe('会費の判定', () => {
     expect(decideMembershipFee('2026-12-20', general('2026-12-20'), [], S).status).toBe('due');
   });
 
-  it('賛助会員は 500円 × 口数', () => {
+  it('駒ヶ根の賛助会員は常に1口で500円（口数が入っていても1口）', () => {
     const m = { joinDate: '2020-05-01', membershipTypeId: 'supporting', units: 3 };
-    expect(decideMembershipFee('2026-10-13', m, [], S)).toMatchObject({ status: 'due', amount: 1500, units: 3 });
+    expect(decideMembershipFee('2026-10-13', m, [], S)).toMatchObject({ status: 'due', amount: 500, units: 1 });
+  });
+
+  it('複数口を認める支部では、会費 × 口数', () => {
+    const multi: BranchSettings = {
+      ...S,
+      membershipTypes: S.membershipTypes.map((t) => (t.id === 'supporting' ? { ...t, allowMultipleUnits: true } : t)),
+    };
+    const m = { joinDate: '2020-05-01', membershipTypeId: 'supporting', units: 3 };
+    expect(decideMembershipFee('2026-10-13', m, [], multi)).toMatchObject({ status: 'due', amount: 1500, units: 3 });
+  });
+
+  it('会費なし（中学生以下）の会員からは受け取らない', () => {
+    const m = { joinDate: '2020-05-01', membershipTypeId: 'child', units: 1 };
+    expect(decideMembershipFee('2026-10-13', m, [], S)).toEqual({ status: 'exempt', fiscalYear: 2026, reason: 'no-fee-type' });
   });
 
   it('一般会員は口数が入っていても1口として扱う', () => {
@@ -76,9 +90,13 @@ describe('会費の判定', () => {
     expect(decideMembershipFee('2026-10-13', m, [], S)).toMatchObject({ amount: 500, units: 1 });
   });
 
-  it('口数が0や小数なら例外', () => {
+  it('複数口を認める支部で、口数が0や小数なら例外', () => {
+    const multi: BranchSettings = {
+      ...S,
+      membershipTypes: S.membershipTypes.map((t) => (t.id === 'supporting' ? { ...t, allowMultipleUnits: true } : t)),
+    };
     const m = { joinDate: '2020-05-01', membershipTypeId: 'supporting', units: 0 };
-    expect(() => decideMembershipFee('2026-10-13', m, [], S)).toThrow();
+    expect(() => decideMembershipFee('2026-10-13', m, [], multi)).toThrow();
   });
 
   it('設定にない会員種別は例外', () => {

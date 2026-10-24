@@ -4,13 +4,14 @@ import type { BranchSettings, Charge, DateString, MemberForFee } from './types';
 /** 会費判定の結果 */
 export type MembershipFeeDecision =
   | { status: 'recorded'; fiscalYear: number } // その年度の記録がすでにある（支払済・免除・前払い）
-  | { status: 'exempt'; fiscalYear: number; reason: 'joined-in-exempt-months' } // 免除として記録する
+  | { status: 'exempt'; fiscalYear: number; reason: 'joined-in-exempt-months' | 'no-fee-type' } // 免除として記録する
   | { status: 'due'; fiscalYear: number; amount: number; units: number }; // この場で受け取る
 
 /**
  * 受付の日に、その年度の会費をどう扱うかを判定する。
  *
  * - その年度の会費の記録（支払済・免除）がすでにあれば 'recorded'
+ * - 会費が0円の会員種別（駒ヶ根は「会費なし（中学生以下）」）なら 'exempt'
  * - 入会した年度で、入会月が免除の月（駒ヶ根は1〜3月）なら 'exempt'
  * - それ以外は 'due'（会費 × 口数）
  *
@@ -27,14 +28,15 @@ export function decideMembershipFee(
   const hasRecord = charges.some((c) => c.kind === 'membership' && c.fiscalYear === fy);
   if (hasRecord) return { status: 'recorded', fiscalYear: fy };
 
+  const type = settings.membershipTypes.find((t) => t.id === member.membershipTypeId);
+  if (!type) throw new Error(`会員種別が設定にありません: ${member.membershipTypeId}`);
+  if (type.feePerUnit === 0) return { status: 'exempt', fiscalYear: fy, reason: 'no-fee-type' };
+
   const joinFy = fiscalYearOf(member.joinDate, settings.fiscalYearStartMonth);
   const joinMonth = parseDate(member.joinDate).month;
   if (joinFy === fy && settings.exemptJoinMonths.includes(joinMonth)) {
     return { status: 'exempt', fiscalYear: fy, reason: 'joined-in-exempt-months' };
   }
-
-  const type = settings.membershipTypes.find((t) => t.id === member.membershipTypeId);
-  if (!type) throw new Error(`会員種別が設定にありません: ${member.membershipTypeId}`);
 
   const units = type.allowMultipleUnits ? member.units : 1;
   if (!Number.isInteger(units) || units < 1) throw new Error(`口数が正しくありません: ${member.units}`);

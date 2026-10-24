@@ -257,10 +257,7 @@
           <div class="choices">
             <label class="choice"><input type="radio" name="type" value="general"><span><span data-t="typeGeneral"></span><small data-t="typeGeneralNote"></small></span></label>
             <label class="choice"><input type="radio" name="type" value="supporting"><span><span data-t="typeSupporting"></span><small data-t="typeSupportingNote"></small></span></label>
-          </div>
-          <div id="unitsBox" hidden style="margin-top:8px">
-            <label for="units" data-t="unitsQ"></label>
-            <select id="units" name="units"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+            <label class="choice"><input type="radio" name="type" value="child"><span><span data-t="typeChild"></span><small data-t="typeChildNote"></small></span></label>
           </div>
           <div class="err" data-t="errChoose"></div>
         </div>
@@ -373,8 +370,8 @@
         goalPh: 'れい：JLPT N3を うけたい',
         typeQ: '{会員|かいいん}の しゅるい',
         typeGeneral: 'いっぱん{会員|かいいん}', typeGeneralNote: '{年会費|ねんかいひ} 500{円|えん}',
-        typeSupporting: 'さんじょ{会員|かいいん}', typeSupportingNote: '1くち 500{円|えん}（なんくちでも よい）',
-        unitsQ: 'なんくち',
+        typeSupporting: 'さんじょ{会員|かいいん}', typeSupportingNote: '{年会費|ねんかいひ} 500{円|えん}（かつどうを おうえん する {人|ひと}）',
+        typeChild: '{中学生|ちゅうがくせい}いか', typeChildNote: '{会費|かいひ}は ありません（{会費|かいひ}は {高校生|こうこうせい}から）',
         s6Title: 'ボランティアほけん',
         insIntro: 'かつどうちゅうの けが などの ための ほけんです。1{年|ねん} 330{円|えん}。はいらなくても {会員|かいいん}に なれます。',
         insQ: 'ほけんに はいりますか',
@@ -438,8 +435,8 @@
         goalPh: 'e.g. Pass JLPT N3',
         typeQ: 'Membership type',
         typeGeneral: 'Regular member', typeGeneralNote: '500 yen per year',
-        typeSupporting: 'Supporting member', typeSupportingNote: '500 yen per unit (any number of units)',
-        unitsQ: 'Number of units',
+        typeSupporting: 'Supporting member', typeSupportingNote: '500 yen per year (supporting our activities)',
+        typeChild: 'Junior high school age or younger', typeChildNote: 'No fee (the fee applies from high school age)',
         s6Title: 'Volunteer insurance',
         insIntro: 'Insurance for injuries during activities. 330 yen per year. You can be a member without it.',
         insQ: 'Do you want to join the insurance?',
@@ -578,7 +575,7 @@
         ['sumAddr', [val('postal'), muniLabel(), val('address')].filter(Boolean).join(' ')],
         ['sumMobile', val('mobile')],
         ['sumRoles', checked('roles').map((v) => labelOf('roles', v)).join('、')],
-        ['sumType', labelOf('type', checked('type')[0]) + (checked('type')[0] === 'supporting' ? ` × ${val('units')}` : '')],
+        ['sumType', labelOf('type', checked('type')[0])],
         ['sumIns', labelOf('insurance', checked('insurance')[0])],
       ];
       $('#summary').innerHTML = rows.map(([k, v]) => `<div><dt>${t(k)}</dt><dd>${(v || '—').replace(/</g, '&lt;')}</dd></div>`).join('');
@@ -594,7 +591,6 @@
     form.addEventListener('change', (e) => {
       e.target.closest('.field')?.classList.remove('invalid');
       $('#returnBox').hidden = checked('kind')[0] !== 'return';
-      $('#unitsBox').hidden = checked('type')[0] !== 'supporting';
       $('#residentBox').hidden = checked('insurance')[0] !== 'want';
       $('#countryOther').hidden = checked('country')[0] !== 'other';
       $('#muniOther').hidden = checked('municipality')[0] !== 'other';

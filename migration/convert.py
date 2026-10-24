@@ -61,6 +61,11 @@ COUNTRY_CODES = {
 }
 LOCAL_AREA_CODE = '0265'  # 市外局番のない自宅電話に付ける（駒ヶ根・伊那周辺）
 PAID_MARKS = {'〇', '○', '◯'}
+# 「△」「▽」：その年度に、翌年度の会費を前払いした（主に1〜3月の入会者）
+PREPAID_MARKS = {'△', '▽'}
+CHILD_TYPE = '会費なし（中学生以下）'
+CHILD_WORDS = ('小学生', '中学生')
+LATEST_FY = 2026  # 旧名簿の最新年度（R8）。これより前の「小学生」などの記載は、今の年齢に当てはまらない
 
 KANA_RE = re.compile(r'^[぀-ゟ゠-ヿー・\s]+$')
 KANJI_RE = re.compile(r'[一-鿿々]')
@@ -146,6 +151,7 @@ class Member:
     notes: list[str] = field(default_factory=list)
     membership_type: str = '一般'
     years_paid: dict[int, str] = field(default_factory=dict)  # 年度 → 記号
+    prepaid_in: set[int] = field(default_factory=set)  # 翌年度分を前払いした年度（△▽）
     r8_received: str = ''
     r8_insurance: bool = False
     join_date: str = ''
@@ -232,10 +238,20 @@ def read_roster(wb, review_parens, review_marks, review_country) -> tuple[list[M
             mark = nfkc(text(v[col])).strip()
             if not mark:
                 continue
-            if mark[0] in PAID_MARKS:
+            if any(w in mark for w in CHILD_WORDS):
+                m.notes.append(f'{fy}年度の会費欄: {mark}')
+                if fy >= LATEST_FY - 1:
+                    m.membership_type = CHILD_TYPE
+                    how = f'会員種別を「{CHILD_TYPE}」にした。会費の記録は作らない'
+                else:
+                    how = '古い年度の記載なので会員種別は変えていない（今は高校生以上の可能性）。その年度の会費の記録は作らない'
+                review_marks.append({'旧名簿の行': r, '年度': fy, '記号': mark, '扱い': how})
+            elif mark[0] in PAID_MARKS:
                 m.years_paid[fy] = mark
                 if len(mark) > 1:
                     m.notes.append(f'{fy}年度の会費欄: {mark}')
+            elif mark[0] in PREPAID_MARKS:
+                m.prepaid_in.add(fy)
             else:
                 review_marks.append({'旧名簿の行': r, '年度': fy, '記号': mark})
         if received_col is not None:
@@ -264,6 +280,9 @@ def merge_duplicates(members: list[Member], review: list[dict]) -> list[Member]:
         for other in group[1:]:
             for fy, mark in other.years_paid.items():
                 keep.years_paid.setdefault(fy, mark)
+            keep.prepaid_in |= other.prepaid_in
+            if other.membership_type != '一般' and keep.membership_type == '一般':
+                keep.membership_type = other.membership_type
             for attr in ('kana', 'nickname', 'postal', 'municipality', 'address', 'mobile', 'home', 'email', 'country'):
                 if not getattr(keep, attr) and getattr(other, attr):
                     setattr(keep, attr, getattr(other, attr))
@@ -350,8 +369,10 @@ def main() -> None:
                 c[k] = v
         return c
 
-    # 旧名簿の年度列 → 会費の記録
+    # 旧名簿の年度列 → 会費の記録（会費なしの会員は作らない）
     for m in members:
+        if m.membership_type == CHILD_TYPE:
+            continue
         for fy in sorted(m.years_paid):
             c = add_charge(m, fy, '会費', 口数=1)
             if fy == 2026:
@@ -359,6 +380,10 @@ def main() -> None:
                 c['本人負担額'] = 500
                 if m.r8_received:
                     c['受領日'] = m.r8_received
+        # △▽：その年度に翌年度分を前払い → 翌年度の会費を「支払済」にする（受領日は不明）
+        for fy in sorted(m.prepaid_in):
+            c = add_charge(m, fy + 1, '会費', 口数=1)
+            c['備考'] = f'旧名簿から移行。{fy}年度に前払い（旧名簿の{fy}年度の欄が△▽）'
 
     # 会費納入の名簿 → 受領日・新規/継続・賛助・メモを補う（翌年度の前払いも）
     for sheet, fy in PAYMENT_SHEETS.items():
@@ -432,7 +457,8 @@ def main() -> None:
         if not rows:
             return
         with open(out / name, 'w', newline='', encoding='utf-8-sig') as f:
-            w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+            keys = list(dict.fromkeys(k for r in rows for k in r))
+            w = csv.DictWriter(f, fieldnames=keys, restval='')
             w.writeheader()
             w.writerows(rows)
 
@@ -459,7 +485,9 @@ def main() -> None:
         f'| 要確認：名寄せできなかった名前 | {len(review_match)} |',
         f'| 要確認：重複をまとめた | {len(review_dups)} |',
         f'| 要確認：氏名欄のカッコ書き・改行 | {len(review_parens)} |',
-        f'| 要確認：会費欄の△▽などの記号 | {len(review_marks)} |',
+        f'| 要確認：会費欄の小学生などの記号 | {len(review_marks)} |',
+        f'| 翌年度分の前払い（△▽） | {sum(len(m.prepaid_in) for m in members)} |',
+        f'| 会費なし（中学生以下） | {sum(1 for m in members if m.membership_type == CHILD_TYPE)} |',
         f'| 要確認：国名を変換できなかった | {len(review_country)} |',
         f'| ニックネーム（下線）を抽出 | {sum(1 for m in members if m.nickname)} |',
         f'| 賛助会員 | {sum(1 for m in members if m.membership_type == "賛助")} |',

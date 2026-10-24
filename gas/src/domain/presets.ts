@@ -11,7 +11,9 @@ export const KOMAGANE_SETTINGS: BranchSettings = {
   exemptJoinMonths: [1, 2, 3],
   membershipTypes: [
     { id: 'general', label: '一般', feePerUnit: 500, allowMultipleUnits: false },
-    { id: 'supporting', label: '賛助', feePerUnit: 500, allowMultipleUnits: true },
+    { id: 'supporting', label: '賛助', feePerUnit: 500, allowMultipleUnits: false },
+    // 会費は高校生から。中学生以下は本人や家族の希望があるときだけ名簿に載せ、会費はかからない
+    { id: 'child', label: '会費なし（中学生以下）', feePerUnit: 0, allowMultipleUnits: false },
   ],
   insurance: {
     enabled: true,

@@ -170,7 +170,8 @@ export const SETTINGS_MEMBERSHIP_TYPES: SheetDef = {
   ],
   seedRows: [
     ['general', '一般', 500, 'いいえ', 2026],
-    ['supporting', '賛助', 500, 'はい', 2026],
+    ['supporting', '賛助', 500, 'いいえ', 2026],
+    ['child', '会費なし（中学生以下）', 0, 'いいえ', 2026],
   ],
 };
 
