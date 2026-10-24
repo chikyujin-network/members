@@ -57,3 +57,44 @@ export function loadBranchSettings(ss: GoogleAppsScript.Spreadsheet.Spreadsheet,
     fy,
   );
 }
+
+/** 列の値が value の行の行番号（2始まり）を返す。見つからなければ -1 */
+export function findRowNumber(sheet: GoogleAppsScript.Spreadsheet.Sheet, def: SheetDef, key: string, value: string): number {
+  const last = sheet.getLastRow();
+  if (last < 2) return -1;
+  const col = def.columns.findIndex((c) => c.key === key) + 1;
+  if (col < 1) throw new Error(`${def.name} に列 ${key} はありません`);
+  const values = sheet.getRange(2, col, last - 1, 1).getValues();
+  const i = values.findIndex((v) => String(v[0]).trim() === value);
+  return i < 0 ? -1 : i + 2;
+}
+
+/** 1行の一部の列を書き換える（updates のキーだけ） */
+export function updateRow(
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+  def: SheetDef,
+  rowNumber: number,
+  updates: Readonly<Record<string, string | number>>,
+): void {
+  for (const [key, value] of Object.entries(updates)) {
+    const col = def.columns.findIndex((c) => c.key === key) + 1;
+    if (col < 1) throw new Error(`${def.name} に列 ${key} はありません`);
+    sheet.getRange(rowNumber, col).setValue(value);
+  }
+}
+
+/** 行をまとめて追記する（列の順番は定義のとおり。足りないキーは空欄） */
+export function appendRecords(
+  sheet: GoogleAppsScript.Spreadsheet.Sheet,
+  def: SheetDef,
+  records: readonly Readonly<Record<string, string | number>>[],
+): void {
+  if (records.length === 0) return;
+  const rows = records.map((r) => def.columns.map((c) => r[c.key] ?? ''));
+  sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, def.columns.length).setValues(rows);
+}
+
+/** 今の日時（日本時間）を 'YYYY-MM-DD HH:MM:SS' で返す */
+export function nowJst(): string {
+  return Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy-MM-dd HH:mm:ss');
+}
