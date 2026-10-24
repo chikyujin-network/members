@@ -1,0 +1,759 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#5893d1">
+  <meta name="robots" content="noindex">
+  <title>スタッフ用画面｜地球人ネットワークinこまがね</title>
+  <link rel="icon" href="../assets/brand/favicon.ico">
+  <link rel="apple-touch-icon" href="../assets/brand/apple-touch-icon.png">
+  <link rel="stylesheet" href="../assets/app.css">
+  <script src="../config.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" async></script>
+  <style>
+    :root { --err: #b3261e; --err-bg: #fdecea; --warn-bg: #fff4d1; --ok: #1b7a3a; --ok-bg: #e6f4ea; --blue-soft: #e8f0fa; }
+    body { font-size: 16px; padding-bottom: env(safe-area-inset-bottom); }
+    [hidden] { display: none !important; }
+    header.top { position: sticky; top: 0; z-index: 5; flex-wrap: wrap; padding: 8px 12px; }
+    header.top img { width: 40px; height: 40px; }
+    header.top .who { flex: 1; min-width: 0; line-height: 1.3; }
+    header.top .who b { display: block; font-size: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    header.top .who span { font-size: 0.8rem; opacity: 0.9; }
+    header.top .logout { background: transparent; border: 1.5px solid rgba(255,255,255,0.8); min-height: 44px; padding: 6px 12px; }
+    .tabs { display: flex; gap: 8px; width: 100%; }
+    .tabs button { flex: 1; min-height: 48px; background: rgba(255,255,255,0.25); font-weight: 700; font-size: 1rem; }
+    .tabs button[aria-selected="true"] { background: #fff; color: var(--navy); }
+    main { max-width: 640px; }
+    button, select, input, textarea { font: inherit; }
+    button { min-height: 44px; cursor: pointer; }
+    button.primary { background: var(--navy); color: #fff; }
+    button.ghost { background: #fff; color: var(--navy); border: 1.5px solid var(--navy); }
+    button.danger { background: var(--err); }
+    button.big { width: 100%; min-height: 64px; font-size: 1.3rem; font-weight: 700; border-radius: 12px; }
+    button.wide { width: 100%; }
+    input[type=text], input[type=search], input[type=date], select, textarea {
+      width: 100%; font-size: 16px; min-height: 48px; padding: 10px 12px; border: 1.5px solid var(--lavender);
+      border-radius: 10px; background: #fff; color: var(--text);
+    }
+    input:focus, select:focus, textarea:focus, button:focus-visible { outline: 3px solid var(--blue); outline-offset: 1px; }
+    label.lbl { display: block; font-weight: 700; margin: 0 0 4px; }
+    .login { text-align: center; padding-top: 24px; }
+    .login img { width: 96px; height: 96px; }
+    .login h1 { color: var(--navy); font-size: 1.6rem; margin: 8px 0; }
+    #gsiButton { display: flex; justify-content: center; margin: 20px 0 8px; min-height: 44px; }
+    .box-err { background: var(--err-bg); color: var(--err); border: 1px solid var(--err); border-radius: 10px; padding: 10px 12px; margin: 10px 0; white-space: pre-wrap; }
+    .box-warn { background: var(--warn-bg); border: 1px solid var(--yellow); border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
+    .box-warn ul { margin: 0; padding-left: 1.2em; }
+    .box-ok { background: var(--ok-bg); border: 1px solid var(--ok); border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
+    .banner-mock { background: var(--yellow); color: var(--navy); font-weight: 700; padding: 6px 12px; text-align: center; font-size: 0.9rem; display: flex; gap: 12px; justify-content: center; align-items: center; flex-wrap: wrap; }
+    .banner-mock select { width: auto; min-height: 36px; padding: 2px 8px; }
+    .loading { color: var(--navy); padding: 12px 0; text-align: center; }
+    .spin { display: inline-block; width: 1em; height: 1em; border: 3px solid var(--lavender); border-top-color: var(--navy); border-radius: 50%; animation: sp 0.8s linear infinite; vertical-align: -2px; margin-right: 6px; }
+    @keyframes sp { to { transform: rotate(360deg); } }
+    .row { display: flex; gap: 8px; align-items: stretch; }
+    .row > * { flex: 1; }
+    .stack > * + * { margin-top: 12px; }
+    .results { list-style: none; margin: 12px 0 0; padding: 0; }
+    .results li { margin-bottom: 8px; }
+    .results button.item { width: 100%; text-align: left; background: #fff; color: var(--text); border: 1.5px solid var(--lavender); border-radius: 12px; padding: 10px 14px; min-height: 64px; display: block; }
+    .results button.item.gone { background: #eceef3; color: #8a8fa5; }
+    .item .nick { font-size: 1.4rem; font-weight: 800; color: var(--navy); line-height: 1.25; word-break: break-word; }
+    .item.gone .nick { color: #8a8fa5; }
+    .item .sub { font-size: 0.85rem; color: #5a6080; }
+    .badge { display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 0 8px; border-radius: 999px; background: var(--lavender); color: var(--navy); margin-left: 6px; vertical-align: 2px; }
+    .badge.warn { background: var(--yellow); }
+    .badge.gone { background: #8a8fa5; color: #fff; }
+    .panel .nick { font-size: 2.6rem; font-weight: 800; color: var(--navy); line-height: 1.15; word-break: break-word; }
+    .panel .legal { font-size: 1.05rem; }
+    .panel .kana { font-size: 0.85rem; color: #5a6080; }
+    .panel .no { font-family: ui-monospace, Menlo, monospace; color: var(--navy); font-weight: 700; }
+    .section { border-top: 1px dashed var(--lavender); padding-top: 12px; margin-top: 12px; }
+    .section h3 { margin: 0 0 6px; font-size: 1rem; color: var(--navy); }
+    .check { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 12px; border: 1.5px solid var(--lavender); border-radius: 10px; background: #fff; cursor: pointer; }
+    .check input { width: 26px; height: 26px; accent-color: var(--navy); flex: none; }
+    .check:has(input:checked) { border-color: var(--navy); background: var(--blue-soft); }
+    .total { font-size: 1.4rem; font-weight: 800; color: var(--navy); text-align: center; background: var(--blue-soft); border-radius: 10px; padding: 10px; margin: 14px 0; }
+    .success { text-align: center; }
+    .success .mark { font-size: 3rem; color: var(--ok); line-height: 1; }
+    .success ul { text-align: left; }
+    .camera { position: fixed; inset: 0; z-index: 20; background: #000; display: flex; flex-direction: column; padding: 12px; gap: 12px; }
+    .camera .head { color: #fff; font-weight: 700; text-align: center; }
+    .camera #reader { flex: 1; min-height: 0; overflow: hidden; }
+    .camera button { background: #fff; color: var(--navy); min-height: 56px; font-weight: 700; }
+    .overlay { position: fixed; inset: 0; z-index: 30; background: rgba(20,24,60,0.55); display: flex; align-items: flex-end; justify-content: center; }
+    .overlay .dlg { background: #fff; width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; border-radius: 16px 16px 0 0; padding: 16px; }
+    @media (min-width: 600px) { .overlay { align-items: center; } .overlay .dlg { border-radius: 16px; } }
+    .overlay h2 { margin: 0 0 8px; font-size: 1.15rem; color: var(--navy); }
+    .diff { margin: 0 0 8px; padding: 8px 10px; background: var(--bg); border-radius: 8px; font-size: 0.95rem; word-break: break-word; }
+    .diff .k { font-weight: 700; display: block; }
+    .diff .b { color: #8a4b4b; text-decoration: line-through; }
+    .diff .a { color: var(--ok); font-weight: 700; }
+    .field { margin-bottom: 12px; }
+    .field .hint { font-size: 0.85rem; color: #5a6080; margin: 2px 0 0; }
+    .req { display: inline-block; font-size: 0.7rem; background: var(--navy); color: #fff; border-radius: 4px; padding: 0 6px; margin-left: 6px; vertical-align: 2px; }
+    .sys { background: #eceef3; color: #4a4f66; border-radius: 10px; padding: 10px 12px; min-height: 44px; word-break: break-word; }
+    .multi { display: grid; gap: 6px; }
+    .multi .check { min-height: 48px; }
+    .url-box { word-break: break-all; background: var(--bg); border: 1px solid var(--lavender); border-radius: 8px; padding: 8px; font-size: 0.85rem; margin: 8px 0; }
+    h2.sec { font-size: 1.1rem; color: var(--navy); margin: 0 0 8px; }
+    .sticky-actions { position: sticky; bottom: 0; background: rgba(246,248,252,0.96); padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); display: flex; gap: 8px; }
+    .sticky-actions > * { flex: 1; }
+    @media (prefers-color-scheme: dark) { /* 受付は明るい場所で使うため、ライト表示のまま */ }
+  </style>
+</head>
+<body>
+  <div id="mockBanner" class="banner-mock" hidden>
+    <span>模擬データ（実際の会員情報ではありません）</span>
+    <label>表示する権限：
+      <select id="mockRole"><option value="運営">運営</option><option value="受付">受付</option></select>
+    </label>
+  </div>
+
+  <!-- ログイン -->
+  <main id="loginView" hidden>
+    <div class="card login">
+      <img src="../assets/brand/logo-komagane.png" alt="地球人ネットワークinこまがね">
+      <h1>スタッフ用画面</h1>
+      <p>受付と会員情報の編集に使います。<br>登録されているスタッフのGoogleアカウントだけがログインできます。</p>
+      <div id="gsiButton"></div>
+      <div id="loginMsg" class="muted" aria-live="polite"></div>
+      <div id="loginErr" class="box-err" hidden></div>
+    </div>
+  </main>
+
+  <!-- ログイン後 -->
+  <div id="appView" hidden>
+    <header class="top">
+      <img src="../assets/brand/logo-komagane.png" alt="">
+      <div class="who"><b id="whoName"></b><span id="whoRole"></span></div>
+      <button class="logout" id="logoutBtn" type="button">ログアウト</button>
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" id="tabReception" aria-selected="true">受付</button>
+        <button type="button" role="tab" id="tabEdit" aria-selected="false" hidden>会員の編集</button>
+      </div>
+    </header>
+
+    <main id="receptionView">
+      <div class="card stack">
+        <div>
+          <label class="lbl" for="eventSel">今日の会</label>
+          <select id="eventSel"></select>
+          <div id="noEvent" class="box-warn" hidden>今日の予定はありません。受付はできません。</div>
+        </div>
+        <div>
+          <label class="lbl" for="q">会員をさがす</label>
+          <input type="search" id="q" placeholder="名前・ニックネーム・会員番号" autocomplete="off" enterkeyhint="search">
+        </div>
+        <button type="button" class="primary big" id="scanBtn">会員証の QR を読む</button>
+        <div id="rErr" class="box-err" hidden></div>
+      </div>
+      <div id="rResults"></div>
+      <div id="rPanel"></div>
+    </main>
+
+    <main id="editView" hidden>
+      <div class="card stack">
+        <div>
+          <label class="lbl" for="eq">編集する会員をさがす</label>
+          <input type="search" id="eq" placeholder="名前・ニックネーム・会員番号" autocomplete="off" enterkeyhint="search">
+        </div>
+        <div id="eErr" class="box-err" hidden></div>
+      </div>
+      <div id="eResults"></div>
+      <div id="ePanel"></div>
+      <div class="card stack">
+        <h2 class="sec">名簿（ビュー）</h2>
+        <p class="muted" style="margin:0">名簿・会費状況などのシートを、今の会員データで作り直します。</p>
+        <button type="button" class="ghost wide" id="refreshBtn">名簿（ビュー）を更新</button>
+        <div id="viewMsg"></div>
+      </div>
+    </main>
+  </div>
+
+  <div id="cameraView" class="camera" hidden>
+    <div class="head">会員証の QR を枠に入れてください</div>
+    <div id="reader"></div>
+    <div id="camErr" class="box-err" hidden></div>
+    <button type="button" id="camCancel">やめる</button>
+  </div>
+  <div id="dlgRoot"></div>
+
+<script>
+(function () {
+  'use strict';
+  const CFG = window.APP_CONFIG || {};
+  const MOCK = new URLSearchParams(location.search).get('mock') === '1';
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const yen = (n) => Number(n).toLocaleString('ja-JP') + '円';
+  const flag = (cc) => /^[A-Za-z]{2}$/.test(cc || '') ? String.fromCodePoint(...cc.toUpperCase().split('').map((c) => 0x1F1E6 + c.charCodeAt(0) - 65)) : '';
+
+  // ---------- 状態 ----------
+  const S = {
+    idToken: null, staff: null, today: '', events: [], settings: null,
+    tab: 'reception', method: '検索',
+    member: null, rec: null, ui: { feeOn: true, insOn: false, resident: '' },
+    busy: false, done: null,
+    edit: { member: null, columns: [], types: [] },
+  };
+
+  // ---------- API ----------
+  class ApiError extends Error { constructor(m, handled) { super(m); this.handled = !!handled; } }
+
+  async function api(action, params) {
+    const body = Object.assign({ action, idToken: S.idToken }, params || {});
+    let r;
+    try {
+      if (MOCK) r = await mockCall(body);
+      else {
+        if (!CFG.apiUrl) throw new Error('config.js の apiUrl が未設定です');
+        const res = await fetch(CFG.apiUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
+        r = await res.json();
+      }
+    } catch (e) {
+      throw new ApiError('通信に失敗しました。電波の状態を確かめて、もう一度お試しください。', false);
+    }
+    if (r && r.needLogin) {
+      toLogin('ログインの有効期限が切れました。もう一度ログインしてください。');
+      throw new ApiError(r.error || 'ログインが必要です', true);
+    }
+    if (!r || !r.ok) throw new ApiError((r && r.error) || '処理に失敗しました', false);
+    return r;
+  }
+
+  function showErr(el, e) { if (e && e.handled) return; el.textContent = (e && e.message) || String(e); el.hidden = false; }
+  function clearErr(el) { el.hidden = true; el.textContent = ''; }
+  const loadingHtml = (t) => `<div class="loading" role="status"><span class="spin"></span>${esc(t || '読み込み中…')}</div>`;
+
+  // ---------- 画面切り替え ----------
+  function toLogin(msg) {
+    S.idToken = null; S.staff = null;
+    stopCamera();
+    $('appView').hidden = true; $('loginView').hidden = false;
+    $('loginMsg').textContent = msg || '';
+    if (window.google && google.accounts && google.accounts.id) { try { google.accounts.id.disableAutoSelect(); } catch (e) { /* 無視 */ } }
+  }
+
+  async function onCredential(credential) {
+    S.idToken = credential;
+    clearErr($('loginErr')); $('loginMsg').innerHTML = loadingHtml('確認しています…');
+    try { await bootstrap(); $('loginMsg').textContent = ''; }
+    catch (e) { S.idToken = null; $('loginMsg').textContent = ''; showErr($('loginErr'), e); }
+  }
+
+  async function bootstrap() {
+    const r = await api('staff.bootstrap', {});
+    S.staff = r.staff; S.today = r.today; S.events = r.events || []; S.settings = r.settings;
+    $('loginView').hidden = true; $('appView').hidden = false;
+    $('whoName').textContent = r.staff.name; $('whoRole').textContent = '権限：' + r.staff.role;
+    $('tabEdit').hidden = r.staff.role !== '運営';
+    resetReception(); resetEdit();
+    fillEvents();
+    selectTab('reception');
+  }
+
+  function selectTab(t) {
+    if (t === 'edit' && S.staff.role !== '運営') t = 'reception';
+    S.tab = t;
+    $('tabReception').setAttribute('aria-selected', t === 'reception');
+    $('tabEdit').setAttribute('aria-selected', t === 'edit');
+    $('receptionView').hidden = t !== 'reception';
+    $('editView').hidden = t !== 'edit';
+    stopCamera();
+  }
+
+  // ---------- 受付 ----------
+  function fillEvents() {
+    const sel = $('eventSel');
+    sel.innerHTML = S.events.map((ev) => `<option value="${esc(ev.eventId)}">${esc(ev.title)}（${esc(ev.startTime)}〜${esc(ev.endTime)} ${esc(ev.venue)}）</option>`).join('');
+    const none = S.events.length === 0;
+    $('noEvent').hidden = !none;
+    sel.hidden = none;
+    $('q').disabled = none; $('scanBtn').disabled = none;
+  }
+
+  function resetReception() {
+    S.member = null; S.rec = null; S.done = null; S.ui = { feeOn: true, insOn: false, resident: '' };
+    $('rPanel').innerHTML = ''; $('rResults').innerHTML = ''; clearErr($('rErr'));
+  }
+
+  function badges(m) {
+    let h = '';
+    if (m.status === '仮登録') h += '<span class="badge warn">仮登録</span>';
+    if (m.status === '退会') h += '<span class="badge gone">退会</span>';
+    if (m.activityStatus === '休眠') h += '<span class="badge warn">休眠</span>';
+    return h;
+  }
+
+  function renderResults(el, members, onPick, emptyText) {
+    if (!members.length) { el.innerHTML = `<div class="card muted">${esc(emptyText || '該当する会員がいません')}</div>`; return; }
+    el.innerHTML = '<ul class="results">' + members.map((m, i) =>
+      `<li><button type="button" class="item ${m.status === '退会' ? 'gone' : ''}" data-i="${i}">
+        <span class="nick">${esc(m.nickname || m.legalName)}</span>${badges(m)}<br>
+        <span class="sub">${esc(m.legalName)}　${esc(m.kana)}</span><br>
+        <span class="sub">${flag(m.country)} ${esc(m.country)}　${esc(m.municipality)}　${esc(m.memberNo)}</span>
+      </button></li>`).join('') + '</ul>';
+    el.querySelectorAll('button.item').forEach((b) => b.addEventListener('click', () => onPick(members[+b.dataset.i])));
+  }
+
+  // 検索ボックス（300msのデバウンス。古い応答は捨てる）
+  function wireSearch(input, resultsEl, errEl, onPick) {
+    let timer = null, seq = 0;
+    input.addEventListener('input', () => {
+      clearTimeout(timer);
+      const q = input.value.trim();
+      if (!q) { seq++; resultsEl.innerHTML = ''; clearErr(errEl); return; }
+      timer = setTimeout(async () => {
+        const my = ++seq;
+        resultsEl.innerHTML = loadingHtml('さがしています…'); clearErr(errEl);
+        try {
+          const r = await api('members.search', { q });
+          if (my !== seq) return;
+          renderResults(resultsEl, r.members || [], onPick);
+        } catch (e) { if (my !== seq) return; resultsEl.innerHTML = ''; showErr(errEl, e); }
+      }, 300);
+    });
+  }
+
+  async function lookup(params, method) {
+    const evId = $('eventSel').value;
+    S.method = method; S.done = null;
+    $('rResults').innerHTML = ''; clearErr($('rErr'));
+    $('rPanel').innerHTML = `<div class="card">${loadingHtml('会員を確認しています…')}</div>`;
+    try {
+      const r = await api('reception.lookup', Object.assign({ eventId: evId }, params));
+      S.member = r.member; S.rec = r.reception;
+      S.ui = { feeOn: true, insOn: false, resident: '' };
+      renderPanel();
+      $('rPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (e) { $('rPanel').innerHTML = ''; showErr($('rErr'), e); }
+  }
+
+  function totalNow() {
+    const rec = S.rec; let t = 0;
+    if (rec.fee.status === 'due' && S.ui.feeOn) t += rec.fee.amount;
+    if (insuranceOffered() && S.ui.insOn) t += rec.insuranceSelfPay || 0;
+    return t;
+  }
+  const insuranceOffered = () => S.settings.insuranceEnabled && !S.rec.insuranceJoined;
+
+  function renderPanel() {
+    const m = S.member, rec = S.rec, ui = S.ui, el = $('rPanel');
+    if (S.done) {
+      el.innerHTML = `<div class="card success stack">
+        <div class="mark" aria-hidden="true">✓</div>
+        <h2 class="sec" style="margin:0">受付しました</h2>
+        <div><b>${esc(m.nickname)}</b> さん</div>
+        ${S.done.length ? '<ul>' + S.done.map((t) => `<li>${esc(t)}</li>`).join('') + '</ul>' : ''}
+        <button type="button" class="primary big" id="nextBtn">次の人</button></div>`;
+      $('nextBtn').addEventListener('click', () => { resetReception(); $('q').value = ''; $('q').focus(); window.scrollTo({ top: 0 }); });
+      return;
+    }
+    const gone = m.status === '退会';
+    let fee = '';
+    if (rec.fee.status === 'due') {
+      fee = `<p style="margin:0 0 8px"><b>今年度（${esc(rec.fee.fiscalYear)}年度）の会費 ${yen(rec.fee.amount)}</b></p>
+        <label class="check"><input type="checkbox" id="feeOn" ${ui.feeOn ? 'checked' : ''}><span>受け取った</span></label>`;
+    } else if (rec.fee.status === 'exempt') {
+      fee = `<p style="margin:0">今年度の会費：免除（${rec.fee.reason === 'joined-in-exempt-months' ? '1〜3月の入会' : '会費なしの会員'}）</p>`;
+    } else {
+      fee = '<p style="margin:0">今年度の会費：支払済み</p>';
+    }
+    let ins = '';
+    if (S.settings.insuranceEnabled) {
+      if (rec.insuranceJoined) ins = '<p style="margin:0">保険：加入済み</p>';
+      else {
+        ins = `<label class="check"><input type="checkbox" id="insOn" ${ui.insOn ? 'checked' : ''}><span>ボランティア保険に入る（${yen(rec.insuranceSelfPay || 0)}）</span></label>`;
+        if (ui.insOn && rec.needsResidentAnswer) {
+          ins += `<fieldset style="border:0;padding:0;margin:10px 0 0"><legend style="font-weight:700">住民票は${esc(S.settings.subsidyMunicipality)}にありますか <span class="req">必須</span></legend>
+            <div class="row">
+              <label class="check"><input type="radio" name="res" value="はい" ${ui.resident === 'はい' ? 'checked' : ''}><span>はい</span></label>
+              <label class="check"><input type="radio" name="res" value="いいえ" ${ui.resident === 'いいえ' ? 'checked' : ''}><span>いいえ</span></label>
+            </div></fieldset>`;
+        }
+      }
+    }
+    const needAnswer = insuranceOffered() && ui.insOn && rec.needsResidentAnswer && !ui.resident;
+    const blocked = gone;
+    el.innerHTML = `<div class="card panel stack">
+      <div>
+        <div class="nick">${esc(m.nickname || m.legalName)}${badges(m)}</div>
+        <div class="legal">${esc(m.legalName)}</div>
+        <div class="kana">${esc(m.kana)}</div>
+        <div class="no">${esc(m.memberNo)}　<span class="muted">${flag(m.country)} ${esc(m.country)} ${esc(m.municipality)}</span></div>
+      </div>
+      ${gone ? '<div class="box-err">この会員は退会しています。受付できません。</div>' : ''}
+      ${rec.alreadyCheckedIn ? '<div class="box-warn"><b>この会はもう受付済みです</b></div>' : ''}
+      ${rec.warnings && rec.warnings.length ? '<div class="box-warn"><ul>' + rec.warnings.map((w) => `<li>${esc(w)}</li>`).join('') + '</ul></div>' : ''}
+      <div class="section"><h3>会費</h3>${fee}</div>
+      ${S.settings.insuranceEnabled ? `<div class="section"><h3>保険</h3>${ins}</div>` : ''}
+      <div class="total">いま受け取る金額：${yen(totalNow())}</div>
+      <div id="ckErr" class="box-err" hidden></div>
+      <button type="button" class="primary big" id="ckBtn" ${blocked || needAnswer || S.busy ? 'disabled' : ''}>${gone ? '退会のため受付できません' : '受付する'}</button>
+      ${needAnswer ? '<div class="muted" style="text-align:center">住民票の回答を選ぶと受付できます</div>' : ''}
+      <button type="button" class="ghost wide" id="cancelBtn">やめる</button>
+    </div>`;
+    const f = $('feeOn'); if (f) f.addEventListener('change', () => { ui.feeOn = f.checked; renderPanel(); });
+    const i = $('insOn'); if (i) i.addEventListener('change', () => { ui.insOn = i.checked; renderPanel(); });
+    el.querySelectorAll('input[name=res]').forEach((r) => r.addEventListener('change', () => { ui.resident = r.value; renderPanel(); }));
+    $('cancelBtn').addEventListener('click', () => { resetReception(); $('q').focus(); });
+    $('ckBtn').addEventListener('click', doCheckin);
+  }
+
+  async function doCheckin() {
+    if (S.busy) return;
+    const rec = S.rec, ui = S.ui;
+    const p = { memberNo: S.member.memberNo, eventId: $('eventSel').value, method: S.method,
+      feeReceived: rec.fee.status === 'due' && ui.feeOn, joinInsurance: insuranceOffered() && ui.insOn };
+    if (p.joinInsurance && rec.needsResidentAnswer) p.residentAnswer = ui.resident;
+    S.busy = true; $('ckBtn').disabled = true; $('ckBtn').innerHTML = '<span class="spin"></span>送信中…';
+    clearErr($('ckErr'));
+    try {
+      const r = await api('reception.checkin', p);
+      S.busy = false; S.done = r.messages || []; renderPanel();
+    } catch (e) {
+      S.busy = false;
+      if (S.rec) { renderPanel(); showErr($('ckErr'), e); }
+    }
+  }
+
+  // ---------- QR カメラ ----------
+  let scanner = null;
+  async function startCamera() {
+    clearErr($('rErr'));
+    if (!window.Html5Qrcode) { showErr($('rErr'), new Error('QR 読み取りの部品を読み込めませんでした。通信を確かめて、ページを開き直してください。')); return; }
+    $('cameraView').hidden = false; clearErr($('camErr'));
+    scanner = new Html5Qrcode('reader');
+    let got = false;
+    try {
+      await scanner.start({ facingMode: 'environment' }, { fps: 10, qrbox: (w, h) => { const s = Math.floor(Math.min(w, h) * 0.8); return { width: s, height: s }; } },
+        async (text) => { if (got) return; got = true; await stopCamera(); lookup({ qr: text }, 'QR'); }, () => {});
+    } catch (e) {
+      $('camErr').textContent = 'カメラを起動できません。ブラウザのカメラ許可を確かめてください。（' + e + '）'; $('camErr').hidden = false;
+    }
+  }
+  async function stopCamera() {
+    const sc = scanner; scanner = null;
+    $('cameraView').hidden = true;
+    if (sc) { try { await sc.stop(); } catch (e) { /* 無視 */ } try { sc.clear(); } catch (e) { /* 無視 */ } }
+  }
+
+  // ---------- 会員の編集 ----------
+  function resetEdit() {
+    S.edit = { member: null, columns: [], types: [] };
+    $('ePanel').innerHTML = ''; $('eResults').innerHTML = ''; clearErr($('eErr')); $('viewMsg').innerHTML = '';
+  }
+
+  async function loadMember(memberNo, notice) {
+    $('eResults').innerHTML = ''; clearErr($('eErr'));
+    $('ePanel').innerHTML = `<div class="card">${loadingHtml('会員を読み込んでいます…')}</div>`;
+    try {
+      const r = await api('member.get', { memberNo });
+      S.edit = { member: r.member, columns: r.columns, types: r.membershipTypes || [] };
+      renderEditForm(notice);
+      $('ePanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (e) { $('ePanel').innerHTML = ''; showErr($('eErr'), e); }
+  }
+
+  const splitMulti = (v) => String(v || '').split(/[、,，]/).map((s) => s.trim()).filter(Boolean);
+
+  function fieldHtml(c, val) {
+    const id = 'f_' + c.key;
+    const req = c.required ? '<span class="req">必須</span>' : '';
+    const hint = c.note ? `<div class="hint">${esc(c.note)}</div>` : '';
+    const head = `<label class="lbl" for="${id}">${esc(c.header)}${req}</label>`;
+    let body;
+    if (c.system) {
+      return `<div class="field"><div class="lbl">${esc(c.header)}（変更できません）</div><div class="sys">${esc(val) || '　'}</div>${hint}</div>`;
+    }
+    if (c.multiOptions) {
+      const cur = splitMulti(val);
+      return `<div class="field"><div class="lbl">${esc(c.header)}${req}</div><div class="multi" data-key="${esc(c.key)}">` +
+        c.multiOptions.map((o) => `<label class="check"><input type="checkbox" value="${esc(o)}" ${cur.includes(o) ? 'checked' : ''}><span>${esc(o)}</span></label>`).join('') + `</div>${hint}</div>`;
+    }
+    const opts = c.options || (c.key === 'membershipType' ? S.edit.types : null);
+    if (opts) {
+      const list = opts.slice(); if (val && !list.includes(String(val))) list.push(String(val));
+      body = `<select id="${id}" data-key="${esc(c.key)}">${c.required ? '' : '<option value=""></option>'}` +
+        list.map((o) => `<option value="${esc(o)}" ${String(val) === o ? 'selected' : ''}>${esc(o)}</option>`).join('') + '</select>';
+    } else if (c.date) {
+      body = `<input type="date" id="${id}" data-key="${esc(c.key)}" value="${esc(val)}">`;
+    } else {
+      body = `<input type="text" id="${id}" data-key="${esc(c.key)}" value="${esc(val)}" autocomplete="off">`;
+    }
+    return `<div class="field">${head}${body}${hint}</div>`;
+  }
+
+  function renderEditForm(notice) {
+    const { member, columns } = S.edit;
+    const cols = columns.filter((c) => c.key !== 'qrToken');
+    $('ePanel').innerHTML = `<div class="card">
+      <h2 class="sec">${esc(member.nickname || member.legalName)}（${esc(member.memberNo)}）</h2>
+      ${notice || ''}
+      <div id="formBody">${cols.map((c) => fieldHtml(c, member[c.key] == null ? '' : member[c.key])).join('')}</div>
+      <div id="fErr" class="box-err" hidden></div>
+      <div class="sticky-actions"><button type="button" class="primary" id="confirmBtn">変更を確認</button></div>
+      <div class="section stack">
+        <h3>会員証</h3>
+        <button type="button" class="ghost wide" id="reissueBtn">会員証を再発行</button>
+        <div id="reissueOut"></div>
+      </div>
+    </div>`;
+    $('confirmBtn').addEventListener('click', onConfirmChanges);
+    $('reissueBtn').addEventListener('click', onReissue);
+  }
+
+  function collectChanges() {
+    const { member, columns } = S.edit; const out = [];
+    for (const c of columns) {
+      if (c.system || c.key === 'qrToken') continue;
+      let now;
+      if (c.multiOptions) {
+        const box = $('formBody').querySelector(`.multi[data-key="${CSS.escape(c.key)}"]`);
+        now = c.multiOptions.filter((o) => [...box.querySelectorAll('input')].some((i) => i.checked && i.value === o)).join('、');
+      } else {
+        const inp = $('formBody').querySelector(`[data-key="${CSS.escape(c.key)}"]`);
+        now = inp ? inp.value.trim() : '';
+      }
+      const before = String(member[c.key] == null ? '' : member[c.key]);
+      const norm = c.multiOptions ? splitMulti(before).join('、') : before.trim();
+      if (now !== norm) out.push({ key: c.key, header: c.header, before, after: now, required: c.required });
+    }
+    return out;
+  }
+
+  // ダイアログ
+  function openDialog(html) {
+    const root = $('dlgRoot');
+    root.innerHTML = `<div class="overlay" role="dialog" aria-modal="true"><div class="dlg">${html}</div></div>`;
+    const first = root.querySelector('textarea,button'); if (first) first.focus();
+    return root;
+  }
+  const closeDialog = () => { $('dlgRoot').innerHTML = ''; };
+
+  function onConfirmChanges() {
+    const fErr = $('fErr'); clearErr(fErr);
+    const ch = collectChanges();
+    if (!ch.length) { showErr(fErr, new Error('変更されている項目がありません。')); return; }
+    const miss = ch.filter((c) => c.required && !c.after);
+    if (miss.length) { showErr(fErr, new Error('必須の項目が空です：' + miss.map((c) => c.header).join('、'))); return; }
+    const root = openDialog(`<h2>この内容で保存しますか</h2>
+      ${ch.map((c) => `<div class="diff"><span class="k">${esc(c.header)}</span><span class="b">${esc(c.before) || '（空）'}</span> → <span class="a">${esc(c.after) || '（空）'}</span></div>`).join('')}
+      <label class="lbl" for="reason">変更の理由（任意）</label>
+      <textarea id="reason" rows="2" placeholder="例：引っ越しの連絡があった"></textarea>
+      <div id="dErr" class="box-err" hidden></div>
+      <div class="row" style="margin-top:12px"><button type="button" class="ghost" id="dNo">戻る</button><button type="button" class="primary" id="dYes">保存する</button></div>`);
+    $('dNo').addEventListener('click', closeDialog);
+    $('dYes').addEventListener('click', async () => {
+      const btn = $('dYes'); btn.disabled = true; $('dNo').disabled = true; btn.innerHTML = '<span class="spin"></span>保存中…';
+      const changes = {}; ch.forEach((c) => { changes[c.key] = c.after; });
+      try {
+        const r = await api('member.update', { memberNo: S.edit.member.memberNo, changes, expectedUpdatedAt: S.edit.member.updatedAt, reason: $('reason').value.trim() });
+        closeDialog();
+        const notice = `<div class="box-ok"><b>保存しました</b>${(r.diffs || []).map((d) => `<div class="diff"><span class="k">${esc(d.header)}</span><span class="b">${esc(d.before) || '（空）'}</span> → <span class="a">${esc(d.after) || '（空）'}</span></div>`).join('')}</div>`;
+        await loadMember(S.edit.member.memberNo, notice);
+      } catch (e) {
+        btn.disabled = false; $('dNo').disabled = false; btn.textContent = '保存する';
+        showErr($('dErr'), e);
+        if (e && !e.handled) $('dErr').textContent += '\n他の人が先に変更した場合は、いったん閉じて、会員を開き直してください。';
+      }
+    });
+  }
+
+  function onReissue() {
+    openDialog(`<h2>会員証を再発行しますか</h2>
+      <p>新しいQRコードが発行されます。<b>古い会員証のQRは使えなくなります。</b>会員証が他の人に知られてしまった場合などに行ってください。</p>
+      <label class="lbl" for="rreason">理由（任意）</label>
+      <textarea id="rreason" rows="2" placeholder="例：会員証のURLを他の人に送ってしまった"></textarea>
+      <div id="rrErr" class="box-err" hidden></div>
+      <div class="row" style="margin-top:12px"><button type="button" class="ghost" id="rrNo">やめる</button><button type="button" class="danger" id="rrYes">再発行する</button></div>`);
+    $('rrNo').addEventListener('click', closeDialog);
+    $('rrYes').addEventListener('click', async () => {
+      const btn = $('rrYes'); btn.disabled = true; $('rrNo').disabled = true; btn.innerHTML = '<span class="spin"></span>発行中…';
+      try {
+        const r = await api('member.reissueToken', { memberNo: S.edit.member.memberNo, reason: $('rreason').value.trim() });
+        closeDialog();
+        const url = new URL('../card/?id=' + encodeURIComponent(r.memberNo) + '&t=' + encodeURIComponent(r.token), location.href).href;
+        $('reissueOut').innerHTML = `<div class="box-ok"><b>再発行しました。</b>新しい会員証のURLを会員に伝えてください。古い会員証のQRはもう使えません。
+          <div class="url-box" id="newUrl">${esc(url)}</div><button type="button" class="primary wide" id="copyBtn">URLをコピー</button></div>`;
+        $('copyBtn').addEventListener('click', async () => {
+          let ok = false;
+          try { await navigator.clipboard.writeText(url); ok = true; } catch (e) {
+            try { const r2 = document.createRange(); r2.selectNodeContents($('newUrl')); const s = getSelection(); s.removeAllRanges(); s.addRange(r2); ok = document.execCommand('copy'); } catch (e2) { /* 無視 */ }
+          }
+          $('copyBtn').textContent = ok ? 'コピーしました' : 'コピーできませんでした。URLを長押ししてコピーしてください';
+        });
+      } catch (e) { btn.disabled = false; $('rrNo').disabled = false; btn.textContent = '再発行する'; showErr($('rrErr'), e); }
+    });
+  }
+
+  // ---------- イベント ----------
+  $('tabReception').addEventListener('click', () => selectTab('reception'));
+  $('tabEdit').addEventListener('click', () => selectTab('edit'));
+  $('logoutBtn').addEventListener('click', () => { resetReception(); resetEdit(); toLogin(''); if (MOCK) bootMock(); });
+  $('scanBtn').addEventListener('click', startCamera);
+  $('camCancel').addEventListener('click', stopCamera);
+  wireSearch($('q'), $('rResults'), $('rErr'), (m) => lookup({ memberNo: m.memberNo }, '検索'));
+  wireSearch($('eq'), $('eResults'), $('eErr'), (m) => loadMember(m.memberNo));
+  $('refreshBtn').addEventListener('click', async () => {
+    const b = $('refreshBtn'); b.disabled = true; $('viewMsg').innerHTML = loadingHtml('更新しています…');
+    try { const r = await api('views.refresh', {}); $('viewMsg').innerHTML = `<div class="box-ok">${esc(r.message)}</div>`; }
+    catch (e) { $('viewMsg').innerHTML = '<div class="box-err" id="vErr"></div>'; showErr($('vErr'), e); }
+    b.disabled = false;
+  });
+  // 入力中に Enter を押しても画面が動かないように
+  $('q').addEventListener('keydown', (e) => { if (e.key === 'Enter') e.preventDefault(); });
+
+  // ---------- 起動 ----------
+  function initGoogle() {
+    if (!(window.google && google.accounts && google.accounts.id)) return false;
+    if (!CFG.googleClientId) { $('loginErr').textContent = 'config.js の googleClientId が未設定です'; $('loginErr').hidden = false; return true; }
+    google.accounts.id.initialize({ client_id: CFG.googleClientId, callback: (resp) => onCredential(resp.credential) });
+    google.accounts.id.renderButton($('gsiButton'), { theme: 'outline', size: 'large', text: 'signin_with', locale: 'ja', width: 280 });
+    return true;
+  }
+
+  function bootMock() {
+    $('loginView').hidden = true;
+    S.idToken = 'mock-token';
+    bootstrap().catch((e) => showErr($('rErr'), e));
+  }
+
+  if (MOCK) {
+    $('mockBanner').hidden = false;
+    $('mockRole').addEventListener('change', () => { MOCKDB.role = $('mockRole').value; if (S.staff) bootMock(); });
+    bootMock();
+  } else {
+    $('loginView').hidden = false;
+    if (!initGoogle()) {
+      $('loginMsg').textContent = 'Google のログイン部品を読み込んでいます…';
+      let n = 0;
+      const t = setInterval(() => {
+        n++;
+        if (initGoogle()) { clearInterval(t); $('loginMsg').textContent = ''; }
+        else if (n > 20) { clearInterval(t); $('loginMsg').textContent = ''; $('loginErr').textContent = 'Google のログイン部品を読み込めませんでした。通信を確かめて、ページを開き直してください。'; $('loginErr').hidden = false; }
+      }, 500);
+    }
+  }
+
+  // ==========================================================
+  // 模擬データ（?mock=1 のときだけ使う。すべて架空の人物・番号）
+  // ==========================================================
+  const MOCKDB = {
+    role: '運営',
+    members: [
+      ['001-90001', '本登録', '見本 美奈', 'ミホン ミナ', 'ミナ', '一般', '', 'JP', '駒ヶ根市', '活動中', 'due', 'はい'],
+      ['001-90002', '本登録', 'NGUYEN Thi Lan', 'グエン ティ ラン', 'ラン', '一般', '学習者', 'VN', '駒ヶ根市', '活動中', 'due', ''],
+      ['001-90003', '本登録', 'Dani Pratama', 'ダニ プラタマ', 'ダニ', '一般', '', 'ID', '伊那市', '活動中', 'recorded', 'いいえ'],
+      ['001-90004', '本登録', 'Maria Santos', 'マリア サントス', 'マリア', '一般', '', 'PH', '駒ヶ根市', '活動中', 'exempt-join', ''],
+      ['001-90005', '本登録', 'Joao Silva', 'ジョアン シルバ', 'ジョアン', '一般', '', 'BR', '飯島町', '活動中', 'insured', 'はい'],
+      ['001-90006', '仮登録', 'Sanjay Thapa', 'サンジャイ タパ', 'サンジャイ', '一般', '', 'NP', '駒ヶ根市', '活動中', 'due', ''],
+      ['001-90007', '退会', '試験 太郎', 'シケン タロウ', 'タロウ', '一般', '', 'JP', '駒ヶ根市', '活動中', 'due', 'はい'],
+      ['001-90008', '本登録', '見本 花子', 'ミホン ハナコ', 'ハナ', '会費なし（中学生以下）', '', 'JP', '宮田村', '休眠', 'exempt-none', 'はい'],
+      ['001-90009', '本登録', 'TRAN Van Linh', 'チャン ヴァン リン', 'リン', '一般', '', 'VN', '駒ヶ根市', '休眠', 'due', 'はい'],
+      ['001-90010', '本登録', 'Betty Reyes', 'ベティ レイエス', 'ベティ', '一般', '日本語ボランティア', 'PH', '駒ヶ根市', '活動中', 'recorded-checked', 'はい'],
+      ['001-90011', '本登録', 'Lucas Souza', 'ルーカス ソウザ', 'ルーカス', '一般', '', 'BR', '中川村', '活動中', 'due', ''],
+      ['001-90012', '仮登録', 'Anja Wulandari', 'アンジャ ウランダリ', 'アンジャ', '一般', '', 'ID', '駒ヶ根市', '活動中', 'due', 'はい'],
+    ].map((a, i) => ({
+      memberNo: a[0], status: a[1], legalName: a[2], kana: a[3], nickname: a[4], membershipType: a[5], roles: a[6],
+      country: a[7], municipality: a[8], activityStatus: a[9], sc: a[10], residentInSubsidyMunicipality: a[11],
+      joinDate: '2025-0' + (4 + (i % 5)) + '-' + String(10 + i).padStart(2, '0'), lastAttendedDate: '2026-10-1' + (i % 4), guardianConsent: '',
+      mobile: '090-0000-' + String(1000 + i), email: 'sample' + (i + 1) + '@example.com', notes: 'ダミーデータ',
+      qrToken: 'mocktoken' + (i + 1), updatedAt: '2026-10-20 09:00:00',
+    })),
+    checkins: {},
+  };
+  const MOCK_TYPES = [{ label: '一般', fee: 500 }, { label: '賛助', fee: 500 }, { label: '会費なし（中学生以下）', fee: 0 }];
+  // 列の定義は gas/src/schema.ts の会員シートと同じ（模擬用に書き出したもの）
+  const MOCK_COLS = [{"key": "memberNo", "header": "会員番号", "system": true, "required": false, "date": false, "options": null, "multiOptions": null, "note": "支部番号＋5桁（例：001-00123）。採番後は変えない"}, {"key": "branchCode", "header": "支部番号", "system": true, "required": false, "date": false, "options": null, "multiOptions": null, "note": ""}, {"key": "status", "header": "登録状態", "system": false, "required": true, "date": false, "options": ["仮登録", "本登録", "退会"], "multiOptions": null, "note": ""}, {"key": "legalName", "header": "登録名", "system": false, "required": true, "date": false, "options": null, "multiOptions": null, "note": "パスポート・住民票と同じ表記"}, {"key": "altName", "header": "別名（旧姓・別の表記）", "system": false, "required": false, "date": false, "options": null, "multiOptions": null, "note": "検索専用。画面や名簿には出さない"}, {"key": "kana", "header": "よみ（カタカナ）", "system": false, "required": true, "date": false, "options": null, "multiOptions": null, "note": ""}, {"key": "nickname", "header": "ニックネーム", "system": false, "required": true, "date": false, "options": null, "multiOptions": null, "note": ""}, {"key": "membershipType", "header": "会員種別", "system": false, "required": true, "date": false, "options": null, "multiOptions": null, "note": "設定_会員種別の名称"}, {"key": "roles", "header": "役割", "system": false, "required": false, "date": false, "options": null, "multiOptions": ["学習者", "日本語ボランティア", "運営スタッフ"], "note": "複数のときは「、」区切り（学習者、日本語ボランティア、運営スタッフ）"}, {"key": "activities", "header": "参加したい活動", "system": false, "required": false, "date": false, "options": null, "multiOptions": ["交流イベント", "日本語教室", "講座", "農園"], "note": "複数のときは「、」区切り（交流イベント、日本語教室、講座、農園）"}, {"key": "country", "header": "国・地域", "system": false, "required": false, "date": false, "options": null, "multiOptions": null, "note": "ISOの2文字コード（例：VN、JP）"}, {"key": "postalCode", "header": "郵便番号", "system": false, "required": false, "date": false, "options": null, "multiOptions": null, "note": ""}, {"key": "municipality", "header": "市町村", "system": false, "required": false, "date": false, "options": null, "multiOptions": null, "note": ""}, {"key": "address", "header": "番地以降", "system": false, "required": false, "date": false, "options": null, "multiOptions": null, "note": ""}, {"key": "residentInSubsidyMunicipality", "header": "住民票が補填自治体にある", "system": false, "required": false, "date": false, "options": ["はい", "いいえ"], "multiOptions": null, "note": "保険料の補填元の判定に使う"}, {"key": "mobile", "header": "携帯電話", "system": false, "required": false, "date": false, "options": null, "multiOptions": null, "note": ""}, {"key": "homePhone", "header": "自宅電話", "system": false, "required": false, "date": false, "options": null, "multiOptions": null, "note": ""}, {"key": "email", "header": "メール", "system": false, "required": false, "date": false, "options": null, "multiOptions": null, "note": ""}, {"key": "japaneseGoal", "header": "日本語の目標", "system": false, "required": false, "date": false, "options": null, "multiOptions": null, "note": ""}, {"key": "notes", "header": "所属・備考", "system": false, "required": false, "date": false, "options": null, "multiOptions": null, "note": ""}, {"key": "joinDate", "header": "入会日", "system": false, "required": false, "date": true, "options": null, "multiOptions": null, "note": "YYYY-MM-DD"}, {"key": "lastAttendedDate", "header": "最終参加日", "system": true, "required": false, "date": false, "options": null, "multiOptions": null, "note": "自動で更新。手入力しない"}, {"key": "activityStatus", "header": "活動状態", "system": true, "required": false, "date": false, "options": ["活動中", "休眠"], "multiOptions": null, "note": "自動で更新。手入力しない"}, {"key": "qrToken", "header": "QRトークン", "system": true, "required": false, "date": false, "options": null, "multiOptions": null, "note": "会員証のQR用。紛失時は再発行"}, {"key": "consentAt", "header": "個人情報の同意日時", "system": true, "required": false, "date": false, "options": null, "multiOptions": null, "note": ""}, {"key": "guardianConsent", "header": "保護者の同意", "system": false, "required": false, "date": false, "options": ["はい", "いいえ"], "multiOptions": null, "note": ""}, {"key": "source", "header": "登録経路", "system": true, "required": false, "date": false, "options": ["フォーム", "紙", "移行"], "multiOptions": null, "note": ""}, {"key": "createdAt", "header": "作成日時", "system": true, "required": false, "date": false, "options": null, "multiOptions": null, "note": ""}, {"key": "updatedAt", "header": "更新日時", "system": true, "required": false, "date": false, "options": null, "multiOptions": null, "note": ""}];
+  const pub = (m) => ({ memberNo: m.memberNo, status: m.status, legalName: m.legalName, kana: m.kana, nickname: m.nickname, membershipType: m.membershipType, roles: m.roles,
+    country: m.country, municipality: m.municipality, activityStatus: m.activityStatus, joinDate: m.joinDate, lastAttendedDate: m.lastAttendedDate,
+    residentInSubsidyMunicipality: m.residentInSubsidyMunicipality, guardianConsent: m.guardianConsent });
+
+  function mockCall(b) {
+    return new Promise((resolve) => setTimeout(() => resolve(mockHandle(b)), 350));
+  }
+  function mockHandle(b) {
+    const ng = (error, extra) => Object.assign({ ok: false, error }, extra || {});
+    if (b.idToken !== 'mock-token') return ng('ログインが必要です', { needLogin: true });
+    const isAdmin = MOCKDB.role === '運営';
+    const find = (no) => MOCKDB.members.find((m) => m.memberNo === no);
+    switch (b.action) {
+      case 'staff.bootstrap':
+        return { ok: true, staff: { email: 'staff@example.invalid', name: '模擬 スタッフ', role: MOCKDB.role }, today: '2026-10-24',
+          events: [
+            { eventId: 'EV-20261024-AM', title: '日本語教室（午前）', startTime: '10:00', endTime: '12:00', venue: '駒ヶ根駅前ビル', branchCode: '001' },
+            { eventId: 'EV-20261024-PM', title: 'おしゃべりカフェ', startTime: '14:00', endTime: '16:00', venue: '中央公民館', branchCode: '001' },
+          ],
+          settings: { branchCode: '001', membershipTypes: MOCK_TYPES, insuranceEnabled: true, insuranceSelfPay: 330, subsidyMunicipality: '駒ヶ根市' } };
+      case 'members.search': {
+        const q = String(b.q || '').toLowerCase();
+        return { ok: true, members: MOCKDB.members.filter((m) => [m.memberNo, m.legalName, m.kana, m.nickname].some((s) => s.toLowerCase().includes(q))).map(pub) };
+      }
+      case 'reception.lookup': {
+        let no = b.memberNo;
+        if (b.qr) {
+          const p = String(b.qr).split(':');
+          const mm = p[0] === 'CJN1' && find(p[1]);
+          if (!mm || mm.qrToken !== p[2]) return ng('この QR は使えません（古い会員証か、会員証ではありません）');
+          no = p[1];
+        }
+        const m = find(no); if (!m) return ng('会員が見つかりません');
+        const sc = m.sc, ins = sc === 'insured';
+        const fee = sc.startsWith('exempt') ? { status: 'exempt', fiscalYear: 2026, reason: sc === 'exempt-join' ? 'joined-in-exempt-months' : 'no-fee-type' }
+          : (sc === 'due' ? { status: 'due', fiscalYear: 2026, amount: 500, units: 1 } : { status: 'recorded', fiscalYear: 2026 });
+        const warnings = [];
+        if (m.status === '仮登録') warnings.push('仮登録の会員です。本登録の手続きを案内してください。');
+        if (m.activityStatus === '休眠') warnings.push('休眠中の会員です。受付すると活動中に戻ります。');
+        return { ok: true, member: pub(m), reception: { fiscalYear: 2026, fee, insuranceJoined: ins, insuranceSelfPay: ins ? null : 330,
+          needsResidentAnswer: !ins && !m.residentInSubsidyMunicipality, alreadyCheckedIn: !!MOCKDB.checkins[b.eventId + '|' + m.memberNo] || sc === 'recorded-checked', warnings } };
+      }
+      case 'reception.checkin': {
+        const m = find(b.memberNo); if (!m) return ng('会員が見つかりません');
+        if (m.status === '退会') return ng('退会した会員は受付できません');
+        const msgs = ['受付を記録しました（' + b.method + '）'];
+        if (b.feeReceived) msgs.push('会費 500円 を記録しました');
+        if (b.joinInsurance) { msgs.push('ボランティア保険の加入を記録しました（330円）'); if (b.residentAnswer) { m.residentInSubsidyMunicipality = b.residentAnswer; msgs.push('住民票：' + b.residentAnswer); } m.sc = 'insured'; }
+        if (b.feeReceived) m.sc = m.sc === 'insured' ? 'insured' : 'recorded';
+        MOCKDB.checkins[b.eventId + '|' + m.memberNo] = true;
+        return { ok: true, messages: msgs };
+      }
+      case 'member.get': {
+        if (!isAdmin) return ng('この操作は運営だけができます');
+        const m = find(b.memberNo); if (!m) return ng('会員が見つかりません');
+        const rec = {}; MOCK_COLS.forEach((c) => { rec[c.key] = m[c.key] == null ? '' : m[c.key]; });
+        return { ok: true, member: rec, columns: MOCK_COLS, membershipTypes: MOCK_TYPES.map((t) => t.label) };
+      }
+      case 'member.update': {
+        if (!isAdmin) return ng('この操作は運営だけができます');
+        const m = find(b.memberNo); if (!m) return ng('会員が見つかりません');
+        if (b.expectedUpdatedAt !== m.updatedAt) return ng('他の人が先にこの会員を更新しました。会員を開き直してから、もう一度変更してください。');
+        const diffs = [];
+        for (const k of Object.keys(b.changes || {})) {
+          const c = MOCK_COLS.find((x) => x.key === k);
+          if (!c || c.system) return ng('変更できない項目です：' + k);
+          diffs.push({ key: k, header: c.header, before: m[k] == null ? '' : m[k], after: b.changes[k] });
+          m[k] = b.changes[k];
+        }
+        m.updatedAt = new Date().toISOString();
+        return { ok: true, diffs, updatedAt: m.updatedAt };
+      }
+      case 'member.reissueToken': {
+        if (!isAdmin) return ng('この操作は運営だけができます');
+        const m = find(b.memberNo); if (!m) return ng('会員が見つかりません');
+        m.qrToken = 'new' + Math.random().toString(36).slice(2, 10);
+        m.updatedAt = new Date().toISOString();
+        return { ok: true, memberNo: m.memberNo, token: m.qrToken };
+      }
+      case 'views.refresh':
+        if (!isAdmin) return ng('この操作は運営だけができます');
+        return { ok: true, message: '名簿（ビュー）を更新しました（模擬）' };
+      default: return ng('不明な操作です：' + b.action);
+    }
+  }
+})();
+</script>
+</body>
+</html>
