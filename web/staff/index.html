@@ -118,7 +118,8 @@
       <h1>スタッフ用画面</h1>
       <p>受付と会員情報の編集に使います。<br>登録されているスタッフのGoogleアカウントだけがログインできます。</p>
       <div id="gsiButton"></div>
-      <p class="muted" style="font-size:0.85rem">ボタンに、使いたいのとは別のアカウント名が出ているときは、ボタン右端の「▼」を押してアカウントを選び直してください。</p>
+      <p class="muted" style="font-size:0.85rem;text-align:center">ボタンに別のアカウントが出てしまうときは、こちらから選んでください。</p>
+      <p style="text-align:center"><button type="button" id="pickAccountBtn" class="btn-secondary" style="min-height:44px;padding:8px 16px">アカウントを選んでログイン</button></p>
       <div id="loginMsg" class="muted" aria-live="polite"></div>
       <div id="loginErr" class="box-err" hidden></div>
     </div>
@@ -607,6 +608,40 @@
   // 入力中に Enter を押しても画面が動かないように
   $('q').addEventListener('keydown', (e) => { if (e.key === 'Enter') e.preventDefault(); });
 
+  // ---------- アカウントを選んでログイン（Google の画面へ移動して戻ってくる方式） ----------
+  // ボタン型のログインは、ブラウザで使っているアカウントに固定されることがある。
+  // この方式は毎回アカウントの選択画面を出す（prompt=select_account）。
+  // OAuth クライアントの「承認済みのリダイレクト URI」に、このページの URL を登録しておく必要がある。
+  const REDIRECT_URI = location.origin + location.pathname.replace(/index\.html$/, '');
+  function randomString() {
+    const a = new Uint8Array(16);
+    crypto.getRandomValues(a);
+    return Array.from(a, (b) => b.toString(16).padStart(2, '0')).join('');
+  }
+  function startAccountPicker() {
+    if (!CFG.googleClientId) return;
+    const state = randomString();
+    const nonce = randomString();
+    try { sessionStorage.setItem('oauthState', state); sessionStorage.setItem('oauthNonce', nonce); } catch (e) { /* 保存できなくても続ける */ }
+    const q = new URLSearchParams({
+      client_id: CFG.googleClientId, redirect_uri: REDIRECT_URI, response_type: 'id_token',
+      scope: 'openid email profile', prompt: 'select_account', state, nonce,
+    });
+    location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + q.toString();
+  }
+  /** Google の画面から戻ってきたとき、URL の # に入っている ID トークンを受け取る */
+  function takeTokenFromRedirect() {
+    if (!location.hash.includes('id_token=') && !location.hash.includes('error=')) return null;
+    const h = new URLSearchParams(location.hash.slice(1));
+    history.replaceState(null, '', location.pathname + location.search); // トークンを URL に残さない
+    let expected = null;
+    try { expected = sessionStorage.getItem('oauthState'); sessionStorage.removeItem('oauthState'); } catch (e) { /* 無視 */ }
+    if (h.get('error')) return { error: 'ログインが取り消されたか、失敗しました（' + h.get('error') + '）' };
+    if (expected && h.get('state') !== expected) return { error: 'ログインの確認に失敗しました。もう一度お試しください' };
+    return { token: h.get('id_token') };
+  }
+  $('pickAccountBtn').addEventListener('click', startAccountPicker);
+
   // ---------- 起動 ----------
   function initGoogle() {
     if (!(window.google && google.accounts && google.accounts.id)) return false;
@@ -628,6 +663,9 @@
     bootMock();
   } else {
     $('loginView').hidden = false;
+    const back = takeTokenFromRedirect();
+    if (back && back.token) onCredential(back.token);
+    else if (back && back.error) { $('loginErr').textContent = back.error; $('loginErr').hidden = false; }
     if (!initGoogle()) {
       $('loginMsg').textContent = 'Google のログイン部品を読み込んでいます…';
       let n = 0;
