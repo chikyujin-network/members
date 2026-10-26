@@ -12,6 +12,8 @@ await build({
   globalName: 'App',
   target: 'es2020',
   charset: 'utf8',
+  // どのコードが公開中かを確かめられるよう、ビルドの日時を埋め込む（URL を開くと表示される）
+  define: { __BUILD__: JSON.stringify(new Date().toISOString()) },
   footer: {
     js: [
       'function doGet(e) { return App.doGet(e); }',

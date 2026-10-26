@@ -16,12 +16,16 @@ export { seedDummyData, clearDummyData } from './devtools';
 
 type Json = Record<string, unknown>;
 
+declare const __BUILD__: string;
+/** ビルドした日時（UTC）。Web アプリの URL を開くと表示され、公開中のコードが最新か確かめられる */
+const BUILD = typeof __BUILD__ === 'string' ? __BUILD__ : 'dev';
+
 function json(body: Json): GoogleAppsScript.Content.TextOutput {
   return ContentService.createTextOutput(JSON.stringify(body)).setMimeType(ContentService.MimeType.JSON);
 }
 
 export function doGet(_e: GoogleAppsScript.Events.DoGet): GoogleAppsScript.Content.TextOutput {
-  return json({ ok: true, action: 'ping', time: new Date().toISOString() });
+  return json({ ok: true, action: 'ping', build: BUILD, time: new Date().toISOString() });
 }
 
 export function doPost(e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput {
@@ -29,7 +33,7 @@ export function doPost(e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Cont
     // ブラウザの事前確認（CORS プリフライト）を避けるため、画面からは Content-Type: text/plain で JSON を送る
     const body = JSON.parse(e.postData?.contents ?? '{}') as Json;
     const action = String(body.action ?? '');
-    if (action === 'ping') return json({ ok: true, action: 'ping', time: new Date().toISOString() });
+    if (action === 'ping') return json({ ok: true, action: 'ping', build: BUILD, time: new Date().toISOString() });
     if (action === 'auth.whoami') {
       // ログインしたスタッフの名前と権限を返す（ログイン確認用）
       const auth = verifyStaff(body.idToken);
